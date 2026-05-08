@@ -1,0 +1,384 @@
+/* ─── Shared Visual Block Styles ───────────────────── */
+
+.block-visual {
+  width: 100%;
+}
+
+/* ─── Heading ──────────────────────────────────────── */
+
+.heading-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  padding: 4px 0;
+}
+
+.heading-input::placeholder {
+  color: #cbd5e1;
+}
+
+/* ─── Subheading ───────────────────────────────────── */
+
+.subheading-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  padding: 2px 0;
+}
+
+.subheading-input::placeholder {
+  color: #cbd5e1;
+}
+
+/* ─── Menu ─────────────────────────────────────────── */
+
+.menu-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.menu-title-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+
+.menu-title-input::placeholder {
+  color: #cbd5e1;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.menu-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.menu-item-name {
+  flex: 1;
+  /* flex: 2; */
+  /* width: 300px; */
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 0;
+  outline: none;
+}
+
+.menu-item-name:focus {
+  border-bottom-color: #e2e8f0;
+}
+
+.menu-item-name::placeholder {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.menu-item-price {
+  width: 70px;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+  padding: 4px 0;
+  outline: none;
+}
+
+.menu-item-price:focus {
+  border-bottom-color: #e2e8f0;
+}
+
+.menu-item-price::placeholder {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.menu-item-unit {
+  width: 50px;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  color: #64748b;
+  padding: 4px 0;
+  outline: none;
+}
+
+.menu-item-unit:focus {
+  border-bottom-color: #e2e8f0;
+}
+
+.menu-item-unit::placeholder {
+  color: #cbd5e1;
+}
+
+.menu-item-remove {
+  background: none;
+  border: none;
+  color: #e53935;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.menu-item-row:hover .menu-item-remove {
+  opacity: 1;
+}
+
+.menu-item-remove:hover {
+  background: #ffebee;
+}
+
+.menu-add-item-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.menu-add-item-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* ─── Image ────────────────────────────────────────── */
+
+.image-visual {
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.image-preview {
+  width: 100%;
+  display: block;
+  border-radius: 6px;
+}
+
+.image-placeholder {
+  width: 100%;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.image-placeholder-icon {
+  font-size: 28px;
+  opacity: 0.5;
+}
+
+.image-placeholder-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ─── Logo & Name ──────────────────────────────────── */
+
+.logo-name-visual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.logo-name-visual.layout-vertical {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.logo-image-area {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.layout-vertical .logo-img {
+  width: 64px;
+  height: 64px;
+}
+
+.logo-placeholder {
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.layout-vertical .logo-placeholder {
+  width: 64px;
+  height: 64px;
+}
+
+.logo-text-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.logo-brand-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0;
+  width: 100%;
+}
+
+.logo-brand-input::placeholder {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.logo-tagline-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  color: #64748b;
+  padding: 0;
+  width: 100%;
+}
+
+.logo-tagline-input::placeholder {
+  color: #cbd5e1;
+}
+
+.layout-vertical .logo-brand-input,
+.layout-vertical .logo-tagline-input {
+  text-align: center;
+}
+
+/* ─── RichTextInput ProseMirror overrides ──────────── */
+
+.heading-input .ProseMirror {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 36px;
+  padding: 4px 0;
+  width: 100%;
+}
+
+.subheading-input .ProseMirror {
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 2px 0;
+  width: 100%;
+}
+
+.menu-title-input .ProseMirror {
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  padding: 4px 0;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.menu-item-name .ProseMirror {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.menu-item-price .ProseMirror {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.menu-item-unit .ProseMirror {
+  font-family: inherit;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.logo-brand-input .ProseMirror {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0;
+  width: 100%;
+}
+
+.logo-tagline-input .ProseMirror {
+  font-family: inherit;
+  font-size: 12px;
+  color: #64748b;
+  padding: 0;
+  width: 100%;
+}
+
+.layout-vertical .logo-brand-input .ProseMirror,
+.layout-vertical .logo-tagline-input .ProseMirror {
+  text-align: center;
+}
+
+/* Menu item flex layout for rich-text-wrapper */
+/* .menu-item-name,
+.menu-item-price,
+.menu-item-unit {
+  display: block;
+  border: 1px solid red;
+} */
+
+
+
+

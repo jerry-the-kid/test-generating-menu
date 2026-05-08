@@ -1,0 +1,370 @@
+.canvas-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+}
+
+.canvas-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 32px;
+  background: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* ─── Single paper page ────────────────────────────── */
+.page {
+  flex-shrink: 0;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Content area inside a page ──────────────────── */
+.page-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ─── Page number label ────────────────────────────── */
+.page-label {
+  position: absolute;
+  bottom: -22px;
+  right: 0;
+  font-size: 11px;
+  color: #9ca3af;
+  user-select: none;
+}
+
+/* ─── Section overflow warning ─────────────────────── */
+.section-frame.overflow-warning {
+  border-bottom: 2px dashed #ef4444;
+}
+.section-frame.overflow-warning::after {
+  content: '⚠ Section exceeds page height';
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 10px;
+  color: #ef4444;
+}
+
+/* ─── Empty state (inside page) ────────────────────── */
+.canvas-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* ─── Section Frame ─────────────────────────────────── */
+
+.section-frame {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 8px;
+  position: relative;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.section-frame:hover {
+  border-color: #94a3b8;
+}
+
+.section-frame.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.section-frame.dragging {
+  opacity: 0.5;
+  border-color: #3b82f6;
+}
+
+.section-frame.locked {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+/* ─── Section Header ────────────────────────────────── */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 16px;
+  color: #94a3b8;
+  user-select: none;
+  line-height: 1;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.lock-badge {
+  font-size: 12px;
+}
+
+.section-type-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+/* ─── Section Toolbar ───────────────────────────────── */
+
+.section-toolbar {
+  position: absolute;
+  top: -32px;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.toolbar-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  color: #475569;
+}
+
+.toolbar-btn:hover {
+  background: #f1f5f9;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbar-btn:disabled:hover {
+  background: transparent;
+}
+
+.toolbar-btn.danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ─── Pane ──────────────────────────────────────────── */
+
+.section-panes {
+  display: flex;
+  gap: 8px;
+  height: 100%;
+  min-height: 60px;
+}
+
+.pane-container {
+  flex: 1;
+  height: min-content;
+  /* height: 100%; */
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  /* padding: 8px; */
+  min-height: 60px;
+  background: #fafbfc;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+
+.pane-container.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  background: #f0f7ff;
+}
+
+.pane-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 60px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+/* ─── Block Renderer ────────────────────────────────── */
+
+.block-item {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* margin-bottom: 4px; */
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.1s;
+}
+
+.block-item:hover {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.block-item.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.block-item.locked {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.block-item.dragging {
+  opacity: 0.4;
+  border-color: #3b82f6;
+}
+
+.block-item-row {
+  display: flex;
+  align-items: flex-start;
+  /* padding: 8px 10px; */
+}
+
+.block-drag-handle {
+  background: none;
+  border: none;
+  cursor: grab;
+  font-size: 14px;
+  color: #cbd5e1;
+  padding: 0;
+  margin-right: 6px;
+  margin-top: 2px;
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.block-item:hover .block-drag-handle {
+  opacity: 1;
+}
+
+.block-drag-handle:hover {
+  color: #64748b;
+}
+
+.block-drag-handle:active {
+  cursor: grabbing;
+}
+
+.block-item-content {
+
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Area Frame ────────────────────────────────────── */
+
+.area-frame {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.area-frame.area-type-fixed {
+  border-color: #fbbf24;
+  background: #fffef5;
+}
+
+.area-frame.area-type-list {
+  border-color: #60a5fa;
+  background: #f8fbff;
+  flex: 1;
+  min-height: 0;
+}
+
+.area-frame.area-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.area-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  position: absolute;
+  top: -12px;
+  left: 8px;
+  background: inherit;
+  z-index: 1;
+}
+
+.area-type-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.area-badge-fixed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.area-badge-list {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.area-name {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.area-height-badge {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+.area-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: visible;
+}
+
+.area-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  color: #cbd5e1;
+  font-size: 12px;
+}

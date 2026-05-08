@@ -1,0 +1,109 @@
+/* ─── Wrapper ──────────────────────────────────────── */
+
+.rich-text-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* ─── Toolbar ──────────────────────────────────────── */
+
+.rich-text-toolbar {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 100;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.toolbar-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: #374151;
+  min-width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-btn:hover {
+  background: #f1f5f9;
+}
+
+.toolbar-btn.active {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+.toolbar-font-size {
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  background: #fff;
+  cursor: pointer;
+  height: 26px;
+}
+
+/* ─── Editor content ───────────────────────────────── */
+
+
+.rich-text-editor {
+  outline: none;
+  width: 100%;
+   word-break: break-word;
+  overflow-wrap: break-word;
+  /* line-height: normal; */
+  /* padding-inline: 0.5rem; */
+  white-space: pre-wrap;
+}
+
+.rich-text-editor p {
+  outline: none;
+  width: 100%;
+  min-height: 1em;
+  zoom: var(--global-scale, 1);
+  line-height: var(--global-line-height, 1.4);
+}
+
+.rich-text-editor .ProseMirror p {
+  margin: 0;
+}
+
+/* Placeholder */
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #cbd5e1;
+  pointer-events: none;
+  height: 0;
+  font-weight: 400;
+}
+
+/* Static preview placeholder */
+.rich-text-preview .rt-placeholder {
+  color: #cbd5e1;
+  font-weight: 400;
+  margin: 0;
+}

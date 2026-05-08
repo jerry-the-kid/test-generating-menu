@@ -1,0 +1,33 @@
+.global-typography-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.typo-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.typo-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.typo-slider {
+  width: 100%;
+  accent-color: #22c55e;
+  cursor: pointer;
+}
+
+.typo-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+}
