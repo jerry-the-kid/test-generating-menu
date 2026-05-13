@@ -1,6 +1,4 @@
 // Shared Tailwind class strings used across Canvas/Section/Pane components.
-// Extracted because the same visual primitives appear in Canvas, SectionContent,
-// SectionToolbar, and MeasurementLayer.
 
 export const SECTION_FRAME =
   'border-2 border-dashed border-slate-300 rounded-lg p-2 relative bg-white transition-[border-color,box-shadow] duration-150 hover:border-slate-400'
@@ -30,6 +28,16 @@ export const PANE_CONTAINER_ACTIVE =
 export const PANE_EMPTY =
   'flex items-center justify-center h-full min-h-[60px] text-slate-300 text-xs'
 
+export const AREA_FRAME_BASE =
+  'border-2 rounded-[10px] p-0 relative flex flex-col transition-[border-color,box-shadow] duration-150'
+export const AREA_FRAME_FIXED = 'border-amber-300 bg-[#fffef5]'
+export const AREA_FRAME_LIST = 'border-blue-400 bg-[#f8fbff] flex-1 min-h-0'
+export const AREA_SELECTED = 'shadow-[0_0_0_3px_rgba(59,130,246,0.2)]'
+
 export function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(' ')
+}
+
+export function formatSectionType(type: string) {
+  return type.replaceAll('_', ' ')
 }

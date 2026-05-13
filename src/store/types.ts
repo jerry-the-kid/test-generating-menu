@@ -1,12 +1,5 @@
 import type { JSONContent } from '@tiptap/react'
 
-// ─── Grid ────────────────────────────────────────────
-
-export interface GridConfig {
-  cols: 1 | 2 | 3 | 4
-  gap: number
-}
-
 // ─── Section Presets ─────────────────────────────────
 
 export type SectionPreset =
@@ -29,7 +22,6 @@ export type BlockType =
 export interface BaseBlock {
   id: string
   type: BlockType
-  libraryId: string | null
   locked: boolean
   marginTop: number
   marginBottom: number
@@ -90,8 +82,6 @@ export interface Pane {
 
 export interface Section {
   id: string
-  colStart: number
-  colSpan: number
   panes: Pane[]
   locked: boolean
   type: SectionPreset
@@ -126,6 +116,8 @@ export interface PageConfig {
     bottom: number
     left: number
   }
+  /** Flex gap in px between areas, and between sections inside a list area */
+  gap: number
 }
 
 /** Resolved dimensions in pixels at 96 DPI (3.7795 px/mm) */
@@ -149,11 +141,6 @@ export interface Page {
 
 // ─── Document ────────────────────────────────────────
 
-export interface LibraryItem {
-  id: string
-  block: Block
-}
-
 export interface GlobalTypography {
   /** Scale multiplier: 0.8 | 0.9 | 1.0 | 1.1 | 1.2 */
   scaleFactor: number
@@ -162,44 +149,8 @@ export interface GlobalTypography {
 }
 
 export interface MenuDoc {
-  id: string
-  name: string
-  templateId: string | null
-  grid: GridConfig
   page: PageConfig
   typography: GlobalTypography
   areas: Area[]
   pages: Page[]
-  library: LibraryItem[]
-}
-
-// ─── Property Panel Schema ───────────────────────────
-
-export type PropFieldType =
-  | 'input'
-  | 'textarea'
-  | 'select'
-  | 'btns'
-  | 'toggle'
-  | 'colors'
-  | 'image_upload'
-  | 'tags_input'
-  | 'note'
-
-export interface PropField {
-  key: string
-  label: string
-  type: PropFieldType
-  options?: string[]
-  default?: unknown
-  required?: boolean
-}
-
-export interface BlockTypeDef {
-  type: BlockType
-  label: string
-  category: 'text' | 'menu' | 'media' | 'layout' | 'info'
-  icon: string
-  defaults: Partial<Block>
-  propSchema: PropField[]
 }

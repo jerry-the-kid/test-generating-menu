@@ -7,6 +7,7 @@ export function createId(): string {
 }
 
 export const MM_TO_PX = 3.7795 // 96 DPI
+export const DEFAULT_PAGE_GAP_PX = 16
 
 export const PAGE_SIZE_DIMS: Record<PageSizePreset, { width: number; height: number }> = {
   A4: { width: 210, height: 297 }, // mm
@@ -28,6 +29,7 @@ export const DEFAULT_PAGE_CONFIG: PageConfig = {
   preset: 'A4',
   orientation: 'portrait',
   padding: { top: 10, right: 10, bottom: 10, left: 10 },
+  gap: DEFAULT_PAGE_GAP_PX,
 }
 
 export const DEFAULT_TYPOGRAPHY: GlobalTypography = {
@@ -37,15 +39,10 @@ export const DEFAULT_TYPOGRAPHY: GlobalTypography = {
 
 export function createEmptyDoc(): MenuDoc {
   return {
-    id: createId(),
-    name: 'Untitled Menu',
-    templateId: null,
-    grid: { cols: 2, gap: 16 },
     page: DEFAULT_PAGE_CONFIG,
     typography: DEFAULT_TYPOGRAPHY,
     areas: [],
     pages: [],
-    library: [],
   }
 }
 
@@ -59,31 +56,23 @@ export function createArea(name: string, type: AreaType, height: 'auto' | number
   }
 }
 
-const SECTION_PRESETS: Record<SectionPreset, (cols: number) => Pick<Section, 'colStart' | 'colSpan' | 'panes'>> = {
-  full_width: (cols) => ({
-    colStart: 1,
-    colSpan: cols,
+const SECTION_PRESETS: Record<SectionPreset, () => Pick<Section, 'panes'>> = {
+  full_width: () => ({
     panes: [{ id: createId(), ratio: 1, blocks: [] }],
   }),
   two_col_equal: () => ({
-    colStart: 1,
-    colSpan: 2,
     panes: [
       { id: createId(), ratio: 0.5, blocks: [] },
       { id: createId(), ratio: 0.5, blocks: [] },
     ],
   }),
   two_col_split: () => ({
-    colStart: 1,
-    colSpan: 2,
     panes: [
       { id: createId(), ratio: 0.33, blocks: [] },
       { id: createId(), ratio: 0.67, blocks: [] },
     ],
   }),
   three_col: () => ({
-    colStart: 1,
-    colSpan: 3,
     panes: [
       { id: createId(), ratio: 0.33, blocks: [] },
       { id: createId(), ratio: 0.34, blocks: [] },
@@ -92,8 +81,8 @@ const SECTION_PRESETS: Record<SectionPreset, (cols: number) => Pick<Section, 'co
   }),
 }
 
-export function createSection(preset: SectionPreset, gridCols: number): Section {
-  const config = SECTION_PRESETS[preset](gridCols)
+export function createSection(preset: SectionPreset): Section {
+  const config = SECTION_PRESETS[preset]()
   return {
     id: createId(),
     locked: false,
@@ -106,7 +95,6 @@ export function createBlock(type: BlockType): Block {
   const base = {
     id: createId(),
     type,
-    libraryId: null,
     locked: false,
     marginTop: 0,
     marginBottom: 0,

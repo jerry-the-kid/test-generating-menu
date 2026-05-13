@@ -47,6 +47,7 @@ interface MenuStoreActions {
   // Page config
   setPagePreset: (preset: PageSizePreset) => void
   setPagePadding: (patch: Partial<PageConfig['padding']>) => void
+  setPageGap: (gap: number) => void
   recalculatePages: (sectionHeights: Map<string, number>) => void
 
   // Typography
@@ -109,7 +110,7 @@ export const useMenuStore = create<MenuStoreState>()(
         addSection: (areaId, preset) => set((state) => {
           const area = state.doc.areas.find((a) => a.id === areaId)
           if (!area) return
-          area.sections.push(createSection(preset, state.doc.grid.cols))
+          area.sections.push(createSection(preset))
         }),
 
         moveSection: (sectionId, toIndex) => set((state) => {
@@ -218,13 +219,18 @@ export const useMenuStore = create<MenuStoreState>()(
           state.doc.pages = []
         }),
 
+        setPageGap: (gap) => set((state) => {
+          state.doc.page.gap = gap
+          state.doc.pages = []
+        }),
+
         recalculatePages: (sectionHeights) => set((state) => {
           const { doc } = state
           const dims = resolvePageDimensions(doc.page)
           const paddingTopPx = doc.page.padding.top * MM_TO_PX
           const paddingBottomPx = doc.page.padding.bottom * MM_TO_PX
           const usableHeight = dims.heightPx - paddingTopPx - paddingBottomPx
-          const gapPx = doc.grid.gap
+          const gapPx = doc.page.gap
 
           let fixedAreasHeight = 0
           for (const area of doc.areas) {
@@ -319,11 +325,9 @@ export const useMenuStore = create<MenuStoreState>()(
 // ─── State selectors ───────────────────────────────────────────────
 
 export const useDoc = () => useMenuStore((s) => s.doc)
-export const useAreas = () => useMenuStore((s) => s.doc.areas)
 export const usePages = () => useMenuStore((s) => s.doc.pages)
 export const useTypography = () => useMenuStore((s) => s.doc.typography)
 export const usePageConfig = () => useMenuStore((s) => s.doc.page)
-export const useGridGap = () => useMenuStore((s) => s.doc.grid.gap)
 
 export const useSelectedBlockId = () => useMenuStore((s) => s.selectedBlockId)
 export const useSelectedSectionId = () => useMenuStore((s) => s.selectedSectionId)
@@ -336,16 +340,16 @@ export const useSelectedBlock = (): Block | null =>
     return findBlockInDoc(s.doc, s.selectedBlockId)?.block ?? null
   })
 
-export const useSelectedSection = (): Section | null =>
-  useMenuStore((s) => {
-    if (!s.selectedSectionId) return null
-    return findSectionInDoc(s.doc, s.selectedSectionId)?.section ?? null
-  })
-
 export const useSelectedArea = (): Area | null =>
   useMenuStore((s) => {
     if (!s.selectedAreaId) return null
     return s.doc.areas.find((a) => a.id === s.selectedAreaId) ?? null
+  })
+
+export const useSelectedSection = (): Section | null =>
+  useMenuStore((s) => {
+    if (!s.selectedSectionId) return null
+    return findSectionInDoc(s.doc, s.selectedSectionId)?.section ?? null
   })
 
 export const useMenuActions = () => useMenuStore((s) => s.actions)
