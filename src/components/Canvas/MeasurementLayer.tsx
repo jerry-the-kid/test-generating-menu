@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { SectionContent } from './SectionContent'
 import type { Section } from '../../store/types'
+import { SECTION_FRAME, SECTION_HEADER, SECTION_TYPE_LABEL } from './styles'
 
 interface Props {
   sections: Section[]
@@ -21,10 +22,8 @@ export function MeasurementLayer({ sections, pageContentWidthPx, onHeightsChange
       onHeightsChange(heights)
     }
 
-    // Initial measurement
     measure()
 
-    // Watch for resize (image loads, content changes, etc.)
     const ro = new ResizeObserver(measure)
     for (const el of refs.current.values()) {
       ro.observe(el)
@@ -53,11 +52,11 @@ export function MeasurementLayer({ sections, pageContentWidthPx, onHeightsChange
             if (el) refs.current.set(section.id, el)
             else refs.current.delete(section.id)
           }}
-          className="section-frame"
+          className={SECTION_FRAME}
           style={{ width: '100%' }}
         >
-          <div className="section-header">
-            <span className="section-type-label">
+          <div className={SECTION_HEADER}>
+            <span className={SECTION_TYPE_LABEL}>
               {section.type.replace(/_/g, ' ')}
             </span>
           </div>

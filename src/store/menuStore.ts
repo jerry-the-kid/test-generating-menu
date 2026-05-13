@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
-import type { AreaType, Block, BlockType, MenuDoc, Page, PageConfig, PageSizePreset, SectionPreset } from './types'
+import type { Area, AreaType, Block, BlockType, MenuDoc, Page, PageConfig, PageSizePreset, Section, SectionPreset } from './types'
 import { createArea, createBlock, createEmptyDoc, createId, createSection, findBlockInDoc, findSectionInDoc, MM_TO_PX, resolvePageDimensions } from './helpers'
 
 interface MenuStoreState {
@@ -12,19 +12,20 @@ interface MenuStoreState {
   selectedSectionId: string | null
   selectedAreaId: string | null
   activePaneId: string | null
+
+  actions: MenuStoreActions
 }
 
 interface MenuStoreActions {
-  // Area actions
+  // Area
   addArea: (name: string, type: AreaType, height?: 'auto' | number) => void
   deleteArea: (areaId: string) => void
   moveAreaUp: (areaId: string) => void
   moveAreaDown: (areaId: string) => void
   setAreaHeight: (areaId: string, height: 'auto' | number) => void
-  setAreaName: (areaId: string, name: string) => void
   selectArea: (areaId: string | null) => void
 
-  // Section actions
+  // Section
   addSection: (areaId: string, preset: SectionPreset) => void
   moveSection: (sectionId: string, toIndex: number) => void
   moveSectionUp: (sectionId: string) => void
@@ -32,7 +33,7 @@ interface MenuStoreActions {
   deleteSection: (sectionId: string) => void
   setPaneRatio: (sectionId: string, ratios: number[]) => void
 
-  // Block actions
+  // Block
   addBlock: (sectionId: string, paneId: string, type: BlockType) => void
   updateBlock: (blockId: string, patch: Partial<Block>) => void
   deleteBlock: (blockId: string) => void
@@ -43,10 +44,6 @@ interface MenuStoreActions {
   selectSection: (sectionId: string | null) => void
   setActivePaneId: (paneId: string | null) => void
 
-  // Grid
-  setGridCols: (cols: 1 | 2 | 3 | 4) => void
-  setGridGap: (gap: number) => void
-
   // Page config
   setPagePreset: (preset: PageSizePreset) => void
   setPagePadding: (patch: Partial<PageConfig['padding']>) => void
@@ -55,11 +52,13 @@ interface MenuStoreActions {
   // Typography
   setGlobalScaleFactor: (factor: number) => void
   setGlobalLineHeight: (height: number) => void
+
+  // History
+  undo: () => void
+  redo: () => void
 }
 
-export type MenuStore = MenuStoreState & MenuStoreActions
-
-export const useMenuStore = create<MenuStore>()(
+export const useMenuStore = create<MenuStoreState>()(
   temporal(
     immer((set) => ({
       doc: createEmptyDoc(),
@@ -68,316 +67,285 @@ export const useMenuStore = create<MenuStore>()(
       selectedAreaId: null,
       activePaneId: null,
 
-      // ─── Area actions ───────────────────────────────
+      actions: {
+        addArea: (name, type, height = 'auto') => set((state) => {
+          const area = createArea(name, type, height)
+          state.doc.areas.push(area)
+          state.selectedAreaId = area.id
+        }),
 
-      addArea: (name, type, height = 'auto') => set((state) => {
-        const area = createArea(name, type, height)
-        state.doc.areas.push(area)
-        state.selectedAreaId = area.id
-      }),
+        deleteArea: (areaId) => set((state) => {
+          state.doc.areas = state.doc.areas.filter((a) => a.id !== areaId)
+          if (state.selectedAreaId === areaId) {
+            state.selectedAreaId = null
+          }
+        }),
 
-      deleteArea: (areaId) => set((state) => {
-        state.doc.areas = state.doc.areas.filter(a => a.id !== areaId)
-        if (state.selectedAreaId === areaId) {
-          state.selectedAreaId = null
-        }
-      }),
+        moveAreaUp: (areaId) => set((state) => {
+          const areas = state.doc.areas
+          const idx = areas.findIndex((a) => a.id === areaId)
+          if (idx <= 0) return
+          const [area] = areas.splice(idx, 1)
+          areas.splice(idx - 1, 0, area)
+        }),
 
-      moveAreaUp: (areaId) => set((state) => {
-        const areas = state.doc.areas
-        const idx = areas.findIndex(a => a.id === areaId)
-        if (idx <= 0) return
-        const [area] = areas.splice(idx, 1)
-        areas.splice(idx - 1, 0, area)
-      }),
+        moveAreaDown: (areaId) => set((state) => {
+          const areas = state.doc.areas
+          const idx = areas.findIndex((a) => a.id === areaId)
+          if (idx === -1 || idx >= areas.length - 1) return
+          const [area] = areas.splice(idx, 1)
+          areas.splice(idx + 1, 0, area)
+        }),
 
-      moveAreaDown: (areaId) => set((state) => {
-        const areas = state.doc.areas
-        const idx = areas.findIndex(a => a.id === areaId)
-        if (idx === -1 || idx >= areas.length - 1) return
-        const [area] = areas.splice(idx, 1)
-        areas.splice(idx + 1, 0, area)
-      }),
+        setAreaHeight: (areaId, height) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) area.height = height
+        }),
 
-      setAreaHeight: (areaId, height) => set((state) => {
-        const area = state.doc.areas.find(a => a.id === areaId)
-        if (area) area.height = height
-      }),
+        selectArea: (areaId) => set((state) => {
+          state.selectedAreaId = areaId
+        }),
 
-      setAreaName: (areaId, name) => set((state) => {
-        const area = state.doc.areas.find(a => a.id === areaId)
-        if (area) area.name = name
-      }),
+        addSection: (areaId, preset) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (!area) return
+          area.sections.push(createSection(preset, state.doc.grid.cols))
+        }),
 
-      selectArea: (areaId) => set((state) => {
-        state.selectedAreaId = areaId
-      }),
+        moveSection: (sectionId, toIndex) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          const { area, sectionIndex } = result
+          if (sectionIndex === -1) return
+          const [section] = area.sections.splice(sectionIndex, 1)
+          area.sections.splice(toIndex, 0, section)
+        }),
 
-      // ─── Section actions ────────────────────────────
+        moveSectionUp: (sectionId) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          const { area, sectionIndex } = result
+          if (sectionIndex <= 0) return
+          const [section] = area.sections.splice(sectionIndex, 1)
+          area.sections.splice(sectionIndex - 1, 0, section)
+        }),
 
-      addSection: (areaId, preset) => set((state) => {
-        const area = state.doc.areas.find(a => a.id === areaId)
-        if (!area) return
-        const section = createSection(preset, state.doc.grid.cols)
-        area.sections.push(section)
-      }),
+        moveSectionDown: (sectionId) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          const { area, sectionIndex } = result
+          if (sectionIndex >= area.sections.length - 1) return
+          const [section] = area.sections.splice(sectionIndex, 1)
+          area.sections.splice(sectionIndex + 1, 0, section)
+        }),
 
-      moveSection: (sectionId, toIndex) => set((state) => {
-        const result = findSectionInDoc(state.doc, sectionId)
-        if (!result) return
-        const { area } = result
-        const fromIndex = area.sections.findIndex(s => s.id === sectionId)
-        if (fromIndex === -1) return
-        const [section] = area.sections.splice(fromIndex, 1)
-        area.sections.splice(toIndex, 0, section)
-      }),
+        deleteSection: (sectionId) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          result.area.sections.splice(result.sectionIndex, 1)
+          if (state.selectedSectionId === sectionId) {
+            state.selectedSectionId = null
+          }
+        }),
 
-      moveSectionUp: (sectionId) => set((state) => {
-        const result = findSectionInDoc(state.doc, sectionId)
-        if (!result) return
-        const { area, sectionIndex } = result
-        if (sectionIndex <= 0) return
-        const [section] = area.sections.splice(sectionIndex, 1)
-        area.sections.splice(sectionIndex - 1, 0, section)
-      }),
-
-      moveSectionDown: (sectionId) => set((state) => {
-        const result = findSectionInDoc(state.doc, sectionId)
-        if (!result) return
-        const { area, sectionIndex } = result
-        if (sectionIndex >= area.sections.length - 1) return
-        const [section] = area.sections.splice(sectionIndex, 1)
-        area.sections.splice(sectionIndex + 1, 0, section)
-      }),
-
-      deleteSection: (sectionId) => set((state) => {
-        for (const area of state.doc.areas) {
-          const idx = area.sections.findIndex(s => s.id === sectionId)
-          if (idx !== -1) {
-            area.sections.splice(idx, 1)
-            if (state.selectedSectionId === sectionId) {
-              state.selectedSectionId = null
+        setPaneRatio: (sectionId, ratios) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          result.section.panes.forEach((pane, i) => {
+            if (ratios[i] !== undefined) {
+              pane.ratio = ratios[i]
             }
+          })
+        }),
+
+        addBlock: (sectionId, paneId, type) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          const pane = result.section.panes.find((p) => p.id === paneId)
+          if (!pane) return
+          const block = createBlock(type)
+          pane.blocks.push(block)
+          state.selectedBlockId = block.id
+        }),
+
+        updateBlock: (blockId, patch) => set((state) => {
+          const result = findBlockInDoc(state.doc, blockId)
+          if (result) {
+            Object.assign(result.block, patch)
+          }
+        }),
+
+        deleteBlock: (blockId) => set((state) => {
+          const result = findBlockInDoc(state.doc, blockId)
+          if (!result) return
+          result.pane.blocks.splice(result.blockIndex, 1)
+          if (state.selectedBlockId === blockId) {
+            state.selectedBlockId = null
+          }
+        }),
+
+        moveBlock: (blockId, toSectionId, toPaneId, toIndex) => set((state) => {
+          const fromResult = findBlockInDoc(state.doc, blockId)
+          if (!fromResult) return
+          const [movedBlock] = fromResult.pane.blocks.splice(fromResult.blockIndex, 1)
+
+          const targetResult = findSectionInDoc(state.doc, toSectionId)
+          if (!targetResult) return
+          const targetPane = targetResult.section.panes.find((p) => p.id === toPaneId)
+          if (!targetPane) return
+          targetPane.blocks.splice(toIndex, 0, movedBlock)
+        }),
+
+        selectBlock: (blockId) => set((state) => {
+          state.selectedBlockId = blockId
+        }),
+
+        selectSection: (sectionId) => set((state) => {
+          state.selectedSectionId = sectionId
+        }),
+
+        setActivePaneId: (paneId) => set((state) => {
+          state.activePaneId = paneId
+        }),
+
+        setPagePreset: (preset) => set((state) => {
+          state.doc.page.preset = preset
+          state.doc.pages = []
+        }),
+
+        setPagePadding: (patch) => set((state) => {
+          Object.assign(state.doc.page.padding, patch)
+          state.doc.pages = []
+        }),
+
+        recalculatePages: (sectionHeights) => set((state) => {
+          const { doc } = state
+          const dims = resolvePageDimensions(doc.page)
+          const paddingTopPx = doc.page.padding.top * MM_TO_PX
+          const paddingBottomPx = doc.page.padding.bottom * MM_TO_PX
+          const usableHeight = dims.heightPx - paddingTopPx - paddingBottomPx
+          const gapPx = doc.grid.gap
+
+          let fixedAreasHeight = 0
+          for (const area of doc.areas) {
+            if (area.type === 'fixed') {
+              if (area.height === 'auto') {
+                let areaH = 0
+                for (const section of area.sections) {
+                  const h = sectionHeights.get(section.id) ?? 0
+                  areaH += (areaH > 0 ? h + gapPx : h)
+                }
+                fixedAreasHeight += (fixedAreasHeight > 0 ? areaH + gapPx : areaH)
+              } else {
+                fixedAreasHeight += (fixedAreasHeight > 0 ? area.height + gapPx : area.height)
+              }
+            }
+          }
+
+          const listAreaAvailableHeight = usableHeight - fixedAreasHeight - (fixedAreasHeight > 0 ? gapPx : 0)
+          const listArea = doc.areas.find((a) => a.type === 'list')
+
+          if (!listArea) {
+            const page: Page = {
+              id: createId(),
+              index: 0,
+              areaContents: doc.areas.map((area) => ({
+                areaId: area.id,
+                sectionIds: area.sections.map((s) => s.id),
+              })),
+            }
+            doc.pages = [page]
             return
           }
-        }
-      }),
 
-      setPaneRatio: (sectionId, ratios) => set((state) => {
-        const result = findSectionInDoc(state.doc, sectionId)
-        if (!result) return
-        result.section.panes.forEach((pane, i) => {
-          if (ratios[i] !== undefined) {
-            pane.ratio = ratios[i]
-          }
-        })
-      }),
+          const listHeight = listArea.height === 'auto'
+            ? listAreaAvailableHeight
+            : listArea.height
 
-      // ─── Block actions ──────────────────────────────
+          const listSectionGroups: string[][] = []
+          let currentGroup: string[] = []
+          let currentHeight = 0
 
-      addBlock: (sectionId, paneId, type) => set((state) => {
-        const result = findSectionInDoc(state.doc, sectionId)
-        if (!result) return
-        const pane = result.section.panes.find(p => p.id === paneId)
-        if (!pane) return
-        const block = createBlock(type)
-        pane.blocks.push(block)
-        state.selectedBlockId = block.id
-      }),
+          for (const section of listArea.sections) {
+            const h = sectionHeights.get(section.id) ?? 0
+            const needed = currentHeight > 0 ? h + gapPx : h
 
-      updateBlock: (blockId, patch) => set((state) => {
-        const result = findBlockInDoc(state.doc, blockId)
-        if (result) {
-          Object.assign(result.block, patch)
-        }
-      }),
-
-      deleteBlock: (blockId) => set((state) => {
-        for (const area of state.doc.areas) {
-          for (const section of area.sections) {
-            for (const pane of section.panes) {
-              const idx = pane.blocks.findIndex(b => b.id === blockId)
-              if (idx !== -1) {
-                pane.blocks.splice(idx, 1)
-                if (state.selectedBlockId === blockId) {
-                  state.selectedBlockId = null
-                }
-                return
-              }
+            if (currentHeight + needed > listHeight && currentGroup.length > 0) {
+              listSectionGroups.push(currentGroup)
+              currentGroup = []
+              currentHeight = 0
             }
+
+            currentGroup.push(section.id)
+            currentHeight += (currentHeight > 0 ? h + gapPx : h)
           }
-        }
-      }),
+          if (currentGroup.length > 0) listSectionGroups.push(currentGroup)
+          if (listSectionGroups.length === 0) listSectionGroups.push([])
 
-      moveBlock: (blockId, toSectionId, toPaneId, toIndex) => set((state) => {
-        // Remove from current location
-        let movedBlock: Block | null = null
-        for (const area of state.doc.areas) {
-          for (const section of area.sections) {
-            for (const pane of section.panes) {
-              const idx = pane.blocks.findIndex(b => b.id === blockId)
-              if (idx !== -1) {
-                [movedBlock] = pane.blocks.splice(idx, 1)
-                break
-              }
-            }
-            if (movedBlock) break
-          }
-          if (movedBlock) break
-        }
-
-        if (!movedBlock) return
-
-        // Insert at new location
-        const targetResult = findSectionInDoc(state.doc, toSectionId)
-        if (!targetResult) return
-        const targetPane = targetResult.section.panes.find(p => p.id === toPaneId)
-        if (!targetPane) return
-        targetPane.blocks.splice(toIndex, 0, movedBlock)
-      }),
-
-      // ─── Selection ──────────────────────────────────
-
-      selectBlock: (blockId) => set((state) => {
-        state.selectedBlockId = blockId
-      }),
-
-      selectSection: (sectionId) => set((state) => {
-        state.selectedSectionId = sectionId
-      }),
-
-      setActivePaneId: (paneId) => set((state) => {
-        state.activePaneId = paneId
-      }),
-
-      // ─── Grid ───────────────────────────────────────
-
-      setGridCols: (cols) => set((state) => {
-        state.doc.grid.cols = cols
-      }),
-
-      setGridGap: (gap) => set((state) => {
-        state.doc.grid.gap = gap
-      }),
-
-      // ─── Page config ────────────────────────────────
-
-      setPagePreset: (preset) => set((state) => {
-        state.doc.page.preset = preset
-        state.doc.pages = []
-      }),
-
-      setPagePadding: (patch) => set((state) => {
-        Object.assign(state.doc.page.padding, patch)
-        state.doc.pages = []
-      }),
-
-      recalculatePages: (sectionHeights) => set((state) => {
-        const { doc } = state
-        const dims = resolvePageDimensions(doc.page)
-        const paddingTopPx = doc.page.padding.top * MM_TO_PX
-        const paddingBottomPx = doc.page.padding.bottom * MM_TO_PX
-        const usableHeight = dims.heightPx - paddingTopPx - paddingBottomPx
-        const gapPx = doc.grid.gap
-
-        // Calculate fixed areas total height
-        let fixedAreasHeight = 0
-        for (const area of doc.areas) {
-          if (area.type === 'fixed') {
-            if (area.height === 'auto') {
-              // For fixed areas with 'auto', use measured section heights
-              let areaH = 0
-              for (const section of area.sections) {
-                const h = sectionHeights.get(section.id) ?? 0
-                areaH += (areaH > 0 ? h + gapPx : h)
-              }
-              fixedAreasHeight += (fixedAreasHeight > 0 ? areaH + gapPx : areaH)
-            } else {
-              fixedAreasHeight += (fixedAreasHeight > 0 ? area.height + gapPx : area.height)
-            }
-          }
-        }
-
-        // List areas get the remaining space
-        const listAreaAvailableHeight = usableHeight - fixedAreasHeight - (fixedAreasHeight > 0 ? gapPx : 0)
-
-        // Find the list area (first one for now)
-        const listArea = doc.areas.find(a => a.type === 'list')
-
-        if (!listArea) {
-          // No list area — single page with all fixed areas
-          const page: Page = {
+          doc.pages = listSectionGroups.map((listSectionIds, idx) => ({
             id: createId(),
-            index: 0,
-            areaContents: doc.areas.map(area => ({
+            index: idx,
+            areaContents: doc.areas.map((area) => ({
               areaId: area.id,
-              sectionIds: area.sections.map(s => s.id),
+              sectionIds: area.id === listArea.id
+                ? listSectionIds
+                : area.sections.map((s) => s.id),
             })),
-          }
-          doc.pages = [page]
-          return
-        }
+          }))
+        }),
 
-        // Calculate effective list area height per page
-        const listHeight = listArea.height === 'auto'
-          ? listAreaAvailableHeight
-          : listArea.height
+        setGlobalScaleFactor: (factor) => set((state) => {
+          state.doc.typography.scaleFactor = factor
+        }),
 
-        // Paginate list area sections
-        const listSectionGroups: string[][] = []
-        let currentGroup: string[] = []
-        let currentHeight = 0
+        setGlobalLineHeight: (height) => set((state) => {
+          state.doc.typography.lineHeight = height
+        }),
 
-        for (const section of listArea.sections) {
-          const h = sectionHeights.get(section.id) ?? 0
-          const needed = currentHeight > 0 ? h + gapPx : h
-
-          if (currentHeight + needed > listHeight && currentGroup.length > 0) {
-            listSectionGroups.push(currentGroup)
-            currentGroup = []
-            currentHeight = 0
-          }
-
-          currentGroup.push(section.id)
-          currentHeight += (currentHeight > 0 ? h + gapPx : h)
-        }
-        if (currentGroup.length > 0) listSectionGroups.push(currentGroup)
-
-        // Ensure at least one page
-        if (listSectionGroups.length === 0) listSectionGroups.push([])
-
-        // Build pages — each page has ALL areas, but list area content varies
-        const pages: Page[] = listSectionGroups.map((listSectionIds, idx) => ({
-          id: createId(),
-          index: idx,
-          areaContents: doc.areas.map(area => ({
-            areaId: area.id,
-            sectionIds: area.id === listArea.id
-              ? listSectionIds
-              : area.sections.map(s => s.id), // fixed areas repeat fully
-          })),
-        }))
-
-        doc.pages = pages
-      }),
-
-      // ─── Typography ─────────────────────────────────
-
-      setGlobalScaleFactor: (factor) => set((state) => {
-        state.doc.typography.scaleFactor = factor
-      }),
-
-      setGlobalLineHeight: (height) => set((state) => {
-        state.doc.typography.lineHeight = height
-      }),
+        undo: () => useMenuStore.temporal.getState().undo(),
+        redo: () => useMenuStore.temporal.getState().redo(),
+      },
     })),
     {
-      // Exclude UI state from undo history
+      // Exclude UI state and actions from undo history
       partialize: (state) => {
-        const { selectedBlockId: _a, selectedSectionId: _b, activePaneId: _c, selectedAreaId: _d, ...rest } = state
-        void _a; void _b; void _c; void _d
-        return rest
+        const { doc } = state
+        return { doc } as MenuStoreState
       },
-    }
-  )
+    },
+  ),
 )
+
+// ─── State selectors ───────────────────────────────────────────────
+
+export const useDoc = () => useMenuStore((s) => s.doc)
+export const useAreas = () => useMenuStore((s) => s.doc.areas)
+export const usePages = () => useMenuStore((s) => s.doc.pages)
+export const useTypography = () => useMenuStore((s) => s.doc.typography)
+export const usePageConfig = () => useMenuStore((s) => s.doc.page)
+export const useGridGap = () => useMenuStore((s) => s.doc.grid.gap)
+
+export const useSelectedBlockId = () => useMenuStore((s) => s.selectedBlockId)
+export const useSelectedSectionId = () => useMenuStore((s) => s.selectedSectionId)
+export const useSelectedAreaId = () => useMenuStore((s) => s.selectedAreaId)
+export const useActivePaneId = () => useMenuStore((s) => s.activePaneId)
+
+export const useSelectedBlock = (): Block | null =>
+  useMenuStore((s) => {
+    if (!s.selectedBlockId) return null
+    return findBlockInDoc(s.doc, s.selectedBlockId)?.block ?? null
+  })
+
+export const useSelectedSection = (): Section | null =>
+  useMenuStore((s) => {
+    if (!s.selectedSectionId) return null
+    return findSectionInDoc(s.doc, s.selectedSectionId)?.section ?? null
+  })
+
+export const useSelectedArea = (): Area | null =>
+  useMenuStore((s) => {
+    if (!s.selectedAreaId) return null
+    return s.doc.areas.find((a) => a.id === s.selectedAreaId) ?? null
+  })
+
+export const useMenuActions = () => useMenuStore((s) => s.actions)

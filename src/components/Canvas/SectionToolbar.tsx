@@ -1,20 +1,23 @@
-import { useMenuStore } from '../../store/menuStore'
+import { useDoc, useMenuActions } from '../../store/menuStore'
 import { findSectionInDoc } from '../../store/helpers'
+import {
+  SECTION_TOOLBAR,
+  SECTION_TOOLBAR_BTN,
+  SECTION_TOOLBAR_BTN_DANGER,
+} from './styles'
 
 export function SectionToolbar({ sectionId }: { sectionId: string }) {
-  const deleteSection = useMenuStore(s => s.deleteSection)
-  const moveSectionUp = useMenuStore(s => s.moveSectionUp)
-  const moveSectionDown = useMenuStore(s => s.moveSectionDown)
-  const doc = useMenuStore(s => s.doc)
+  const { deleteSection, moveSectionUp, moveSectionDown } = useMenuActions()
+  const doc = useDoc()
 
   const result = findSectionInDoc(doc, sectionId)
   const isFirst = result ? result.sectionIndex === 0 : true
   const isLast = result ? result.sectionIndex >= result.area.sections.length - 1 : true
 
   return (
-    <div className="section-toolbar">
+    <div className={SECTION_TOOLBAR}>
       <button
-        className="toolbar-btn"
+        className={SECTION_TOOLBAR_BTN}
         onClick={(e) => {
           e.stopPropagation()
           moveSectionUp(sectionId)
@@ -25,7 +28,7 @@ export function SectionToolbar({ sectionId }: { sectionId: string }) {
         ↑
       </button>
       <button
-        className="toolbar-btn"
+        className={SECTION_TOOLBAR_BTN}
         onClick={(e) => {
           e.stopPropagation()
           moveSectionDown(sectionId)
@@ -36,7 +39,7 @@ export function SectionToolbar({ sectionId }: { sectionId: string }) {
         ↓
       </button>
       <button
-        className="toolbar-btn danger"
+        className={SECTION_TOOLBAR_BTN_DANGER}
         onClick={(e) => {
           e.stopPropagation()
           deleteSection(sectionId)

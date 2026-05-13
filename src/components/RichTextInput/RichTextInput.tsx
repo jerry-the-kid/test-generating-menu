@@ -37,121 +37,91 @@ export interface RichTextInputProps {
 }
 
 const FONT_SIZES = [
-  "10",
-  "12",
-  "13",
-  "14",
-  "16",
-  "18",
-  "20",
-  "22",
-  "24",
-  "28",
-  "32",
-  "36",
-  "38",
-  "42",
-  "48",
-  "56",
-  "64",
-  "72",
+  "10", "12", "13", "14", "16", "18", "20", "22", "24",
+  "28", "32", "36", "38", "42", "48", "56", "64", "72",
 ];
+
+const TOOLBAR_BTN_BASE =
+  "bg-transparent border border-transparent rounded cursor-pointer px-1.5 py-0.5 text-[13px] text-gray-700 min-w-[26px] h-[26px] flex items-center justify-center hover:bg-slate-100";
+const TOOLBAR_BTN_ACTIVE =
+  "bg-sky-100 border-sky-300 text-sky-700 border rounded cursor-pointer px-1.5 py-0.5 text-[13px] min-w-[26px] h-[26px] flex items-center justify-center";
 
 function ToolbarButtons({ editor }: { editor: Editor }) {
   const currentSize =
     editor.getAttributes("textStyle")?.fontSize?.replace("px", "") ?? "14";
 
+  const btn = (active: boolean) => (active ? TOOLBAR_BTN_ACTIVE : TOOLBAR_BTN_BASE);
+
   return (
-    <div className="rich-text-toolbar" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="absolute bottom-full left-0 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.12)] z-[100] whitespace-nowrap mb-1"
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().toggleBold().run();
-        }}
-        className={`toolbar-btn ${editor.isActive("bold") ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run(); }}
+        className={btn(editor.isActive("bold"))}
         title="Bold"
       >
         <b>B</b>
       </button>
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().toggleItalic().run();
-        }}
-        className={`toolbar-btn ${editor.isActive("italic") ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run(); }}
+        className={btn(editor.isActive("italic"))}
         title="Italic"
       >
         <i>I</i>
       </button>
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().toggleUnderline().run();
-        }}
-        className={`toolbar-btn ${editor.isActive("underline") ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleUnderline().run(); }}
+        className={btn(editor.isActive("underline"))}
         title="Underline"
       >
         <u>U</u>
       </button>
 
-      <span className="toolbar-sep" />
+      <span className="w-px h-[18px] bg-slate-200 mx-1" />
 
-      <div style={{ maxHeight: '50px', overflowY: 'scroll' }}>
-      <select
-        className="toolbar-font-size"
-        value={currentSize}
-        onChange={(e) => {
-          editor
-            .chain()
-            .focus()
-            .setMark("textStyle", { fontSize: `${e.target.value}px` })
-            .run();
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-        onBlur={() => editor.commands.focus()}
-      > 
-        {FONT_SIZES.map((s) => (
-          <option key={s} value={s}>
-            {s}px
-          </option>
-        ))}
-      </select>
+      <div className="max-h-[50px] overflow-y-scroll">
+        <select
+          className="border border-slate-200 rounded px-1 py-0.5 text-xs bg-white cursor-pointer h-[26px]"
+          value={currentSize}
+          onChange={(e) => {
+            editor.chain().focus().setMark("textStyle", { fontSize: `${e.target.value}px` }).run();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onBlur={() => editor.commands.focus()}
+        >
+          {FONT_SIZES.map((s) => (
+            <option key={s} value={s}>{s}px</option>
+          ))}
+        </select>
       </div>
 
-      <span className="toolbar-sep" />
+      <span className="w-px h-[18px] bg-slate-200 mx-1" />
 
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().setTextAlign("left").run();
-        }}
-        className={`toolbar-btn ${editor.isActive({ textAlign: "left" }) ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("left").run(); }}
+        className={btn(editor.isActive({ textAlign: "left" }))}
         title="Align left"
       >
         ≡
       </button>
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().setTextAlign("center").run();
-        }}
-        className={`toolbar-btn ${editor.isActive({ textAlign: "center" }) ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("center").run(); }}
+        className={btn(editor.isActive({ textAlign: "center" }))}
         title="Align center"
       >
         ≡
       </button>
       <button
         type="button"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          editor.chain().focus().setTextAlign("right").run();
-        }}
-        className={`toolbar-btn ${editor.isActive({ textAlign: "right" }) ? "active" : ""}`}
+        onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setTextAlign("right").run(); }}
+        className={btn(editor.isActive({ textAlign: "right" }))}
         title="Align right"
       >
         ≡
@@ -224,7 +194,7 @@ export function RichTextInput({
   return (
     <div
       ref={wrapperRef}
-      className="rich-text-wrapper"
+      className="relative w-full"
       onClick={(e) => e.stopPropagation()}
     >
       {isFocused && editor && <ToolbarButtons editor={editor} />}
@@ -246,12 +216,10 @@ export function LazyRichTextInput(props: RichTextInputProps) {
     }
   }, [props.content]);
 
-  console.log("Generated HTML:", html);
-
   if (!isActive) {
     return (
       <div
-        className={`rich-text-wrapper rich-text-preview ${props.className ?? ""}`}
+        className={`relative w-full rich-text-preview ${props.className ?? ""}`}
         onClick={(e) => {
           e.stopPropagation();
           setIsActive(true);

@@ -1,7 +1,14 @@
 import { useRef, useCallback, useState, useMemo } from "react";
 import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { useSortable, isSortable } from "@dnd-kit/react/sortable";
-import { useMenuStore } from "../../store/menuStore";
+import {
+  useDoc,
+  useMenuActions,
+  usePages,
+  useSelectedAreaId,
+  useSelectedSectionId,
+  useTypography,
+} from "../../store/menuStore";
 import { resolvePageDimensions, MM_TO_PX } from "../../store/helpers";
 import { SectionContent } from "./SectionContent";
 import { SectionToolbar } from "./SectionToolbar";
@@ -9,7 +16,17 @@ import { CanvasToolbar } from "./CanvasToolbar";
 import { PageTabs } from "./PageTabs";
 import { MeasurementLayer } from "./MeasurementLayer";
 import type { Area, Page, Section } from "../../store/types";
-import "./Canvas.css";
+import {
+  SECTION_FRAME,
+  SECTION_FRAME_SELECTED,
+  SECTION_FRAME_DRAGGING,
+  SECTION_FRAME_LOCKED,
+  SECTION_HEADER,
+  DRAG_HANDLE,
+  LOCK_BADGE,
+  SECTION_TYPE_LABEL,
+  cx,
+} from "./styles";
 
 function SortableSection({
   section,
@@ -26,39 +43,37 @@ function SortableSection({
     disabled: section.locked,
   });
 
-  const selectSection = useMenuStore((s) => s.selectSection);
-  const selectedSectionId = useMenuStore((s) => s.selectedSectionId);
+  const { selectSection } = useMenuActions();
+  const selectedSectionId = useSelectedSectionId();
   const isSelected = selectedSectionId === section.id;
 
   return (
     <div
       ref={ref}
-      className={[
-        "section-frame",
-        isDragging && "dragging",
-        section.locked && "locked",
-        isSelected && "selected",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={cx(
+        SECTION_FRAME,
+        isDragging && SECTION_FRAME_DRAGGING,
+        section.locked && SECTION_FRAME_LOCKED,
+        isSelected && SECTION_FRAME_SELECTED,
+      )}
       style={{ width: "100%" }}
       onClick={(e) => {
         e.stopPropagation();
         selectSection(section.id);
       }}
     >
-      <div className="section-header">
+      <div className={SECTION_HEADER}>
         {!section.locked && (
-          <div ref={handleRef} className="drag-handle" title="Drag to reorder">
+          <div ref={handleRef} className={DRAG_HANDLE} title="Drag to reorder">
             ⠿
           </div>
         )}
         {section.locked && (
-          <div className="lock-badge" title="Locked">
+          <div className={LOCK_BADGE} title="Locked">
             🔒
           </div>
         )}
-        <span className="section-type-label">
+        <span className={SECTION_TYPE_LABEL}>
           {section.type.replace(/_/g, " ")}
         </span>
       </div>
@@ -69,6 +84,12 @@ function SortableSection({
     </div>
   );
 }
+
+const AREA_FRAME_BASE =
+  "border-2 rounded-[10px] p-0 relative flex flex-col transition-[border-color,box-shadow] duration-150";
+const AREA_FRAME_FIXED = "border-amber-300 bg-[#fffef5]";
+const AREA_FRAME_LIST = "border-blue-400 bg-[#f8fbff] flex-1 min-h-0";
+const AREA_SELECTED = "shadow-[0_0_0_3px_rgba(59,130,246,0.2)]";
 
 function AreaRenderer({
   area,
@@ -81,8 +102,8 @@ function AreaRenderer({
   sectionById: Map<string, Section>;
   gapPx: number;
 }) {
-  const selectArea = useMenuStore((s) => s.selectArea);
-  const selectedAreaId = useMenuStore((s) => s.selectedAreaId);
+  const { selectArea } = useMenuActions();
+  const selectedAreaId = useSelectedAreaId();
   const isSelected = selectedAreaId === area.id;
 
   const sections = sectionIds
@@ -91,13 +112,11 @@ function AreaRenderer({
 
   return (
     <div
-      className={[
-        "area-frame",
-        `area-type-${area.type}`,
-        isSelected && "area-selected",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={cx(
+        AREA_FRAME_BASE,
+        area.type === "fixed" ? AREA_FRAME_FIXED : AREA_FRAME_LIST,
+        isSelected && AREA_SELECTED,
+      )}
       style={{
         ...(area.height !== "auto" ? { height: `${area.height}px`, overflow: "hidden" } : {}),
         gap: `${gapPx}px`,
@@ -107,22 +126,25 @@ function AreaRenderer({
         selectArea(area.id);
       }}
     >
-      <div className="area-header">
-        <span className={`area-type-badge area-badge-${area.type}`}>
+      <div className="flex items-center gap-1.5 px-2 py-0.5 absolute -top-3 left-2 bg-inherit z-[1]">
+        <span
+          className={cx(
+            "text-[9px] px-1.5 py-px rounded-[3px] uppercase font-semibold tracking-[0.04em]",
+            area.type === "fixed"
+              ? "bg-amber-100 text-amber-900"
+              : "bg-blue-100 text-blue-900",
+          )}
+        >
           {area.type}
         </span>
-        <span className="area-name">{area.name}</span>
+        <span className="text-[11px] text-slate-500 font-medium">{area.name}</span>
       </div>
-      <div className="area-content" style={{ gap: `${gapPx}px` }}>
+      <div className="flex flex-col flex-1 overflow-visible" style={{ gap: `${gapPx}px` }}>
         {sections.map((section, index) => (
-          <SortableSection
-            key={section.id}
-            section={section}
-            index={index}
-          />
+          <SortableSection key={section.id} section={section} index={index} />
         ))}
         {sections.length === 0 && (
-          <div className="area-empty">
+          <div className="flex items-center justify-center min-h-[50px] text-slate-300 text-xs">
             No sections — add one to this area
           </div>
         )}
@@ -132,13 +154,10 @@ function AreaRenderer({
 }
 
 export function Canvas() {
-  const doc = useMenuStore((s) => s.doc);
-  const pages = useMenuStore((s) => s.doc.pages);
-  const typography = useMenuStore((s) => s.doc.typography);
-  const moveSection = useMenuStore((s) => s.moveSection);
-  const selectSection = useMenuStore((s) => s.selectSection);
-  const selectArea = useMenuStore((s) => s.selectArea);
-  const recalculatePages = useMenuStore((s) => s.recalculatePages);
+  const doc = useDoc();
+  const pages = usePages();
+  const typography = useTypography();
+  const { moveSection, selectSection, selectArea, recalculatePages } = useMenuActions();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const dims = resolvePageDimensions(doc.page);
@@ -149,10 +168,8 @@ export function Canvas() {
     paddingLeft: `${doc.page.padding.left * MM_TO_PX}px`,
   };
 
-  // Stable heights ref — avoids setState re-render loop
   const stableHeights = useRef<Map<string, number>>(new Map());
 
-  // Stable callback so MeasurementLayer's useEffect doesn't fire on every render
   const handleHeightsChange = useCallback(
     (heights: Map<string, number>) => {
       stableHeights.current = heights;
@@ -161,21 +178,16 @@ export function Canvas() {
     [recalculatePages],
   );
 
-  // Collect all sections from all areas for the MeasurementLayer
-  // useMemo is critical: flatMap always returns a new array, so without memoization
-  // MeasurementLayer's useEffect fires every render → recalculatePages → infinite loop.
-  // doc.areas keeps the same reference after recalculatePages (immer only replaces doc.pages),
-  // so this stays stable unless areas actually change.
+  // useMemo critical: flatMap returns a new array each render — without this,
+  // MeasurementLayer's effect fires every render → recalculatePages → infinite loop.
   const allSections = useMemo(
     () => doc.areas.flatMap((a) => a.sections),
     [doc.areas],
   );
 
-  // Compute content width for measurement (same width used in page-content)
   const contentWidthPx =
     dims.widthPx - (doc.page.padding.left + doc.page.padding.right) * MM_TO_PX;
 
-  // Build a flat section map for lookups
   const sectionById = new Map<string, Section>();
   for (const area of doc.areas) {
     for (const section of area.sections) {
@@ -183,10 +195,8 @@ export function Canvas() {
     }
   }
 
-  // Build area map
   const areaById = new Map(doc.areas.map((a) => [a.id, a]));
 
-  // Effective pages — if no computed pages yet, show one page with all content
   const effectivePages: Page[] =
     pages.length > 0
       ? pages
@@ -202,19 +212,22 @@ export function Canvas() {
         ];
 
   return (
-    <div className="canvas-wrapper">
+    <div className="flex flex-col h-full flex-1">
       <MeasurementLayer
         sections={allSections}
         pageContentWidthPx={contentWidthPx}
         onHeightsChange={handleHeightsChange}
-        styles={{  '--global-scale': typography.scaleFactor,
-                '--global-line-height': typography.lineHeight,
-               } as React.CSSProperties}
+        styles={
+          {
+            "--global-scale": typography.scaleFactor,
+            "--global-line-height": typography.lineHeight,
+          } as React.CSSProperties
+        }
       />
       <CanvasToolbar />
       <PageTabs />
       <div
-        className="canvas-viewport"
+        className="flex-1 overflow-auto p-8 bg-gray-200 flex flex-col items-center gap-8"
         onClick={() => {
           selectSection(null);
           selectArea(null);
@@ -238,16 +251,18 @@ export function Canvas() {
             <div
               key={page.id}
               id={`page-${page.index}`}
-              className="page"
-              style={{
-                width: `${dims.widthPx}px`,
-                height: `${dims.heightPx}px`,
-                '--global-scale': typography.scaleFactor,
-                '--global-line-height': typography.lineHeight,
-              } as React.CSSProperties}
+              className="flex-shrink-0 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.04)] rounded-sm relative overflow-hidden"
+              style={
+                {
+                  width: `${dims.widthPx}px`,
+                  height: `${dims.heightPx}px`,
+                  "--global-scale": typography.scaleFactor,
+                  "--global-line-height": typography.lineHeight,
+                } as React.CSSProperties
+              }
             >
               <div
-                className="page-content"
+                className="flex flex-col h-full box-border"
                 style={{ ...paddingStyle, gap: `${doc.grid.gap}px` }}
               >
                 {page.areaContents.map((ac) => {
@@ -264,12 +279,14 @@ export function Canvas() {
                   );
                 })}
                 {doc.areas.length === 0 && (
-                  <div className="canvas-empty">
+                  <div className="flex items-center justify-center h-[200px] text-slate-400 text-sm">
                     <p>No areas yet — add an area to get started.</p>
                   </div>
                 )}
               </div>
-              <span className="page-label">Page {page.index + 1}</span>
+              <span className="absolute -bottom-[22px] right-0 text-[11px] text-gray-400 select-none">
+                Page {page.index + 1}
+              </span>
             </div>
           ))}
           <DragOverlay>
@@ -278,13 +295,13 @@ export function Canvas() {
                 const s = sectionById.get(activeDragId);
                 return s ? (
                   <div
-                    className="section-frame dragging"
+                    className={cx(SECTION_FRAME, SECTION_FRAME_DRAGGING)}
                     style={{
                       width: `${dims.widthPx - (doc.page.padding.left + doc.page.padding.right) * MM_TO_PX}px`,
                     }}
                   >
-                    <div className="section-header">
-                      <span className="section-type-label">
+                    <div className={SECTION_HEADER}>
+                      <span className={SECTION_TYPE_LABEL}>
                         {s.type.replace(/_/g, " ")}
                       </span>
                     </div>

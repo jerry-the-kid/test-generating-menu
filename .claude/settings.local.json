@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem C:\\\\testing-menu-generate-site\\\\src -Recurse -File | ForEach-Object { $_.FullName })",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "PowerShell(pnpm build *)"
+    ]
+  }
+}

@@ -1,17 +1,15 @@
 import { DragDropProvider } from '@dnd-kit/react'
 import { Panel, Group, Separator } from 'react-resizable-panels'
 import type { Layout } from 'react-resizable-panels'
-import { useMenuStore } from '../../store/menuStore'
+import { useActivePaneId, useMenuActions, useSelectedSectionId } from '../../store/menuStore'
 import { BlockRenderer } from './BlockRenderer'
 import type { Section } from '../../store/types'
+import { PANE_CONTAINER, PANE_CONTAINER_ACTIVE, PANE_EMPTY, cx } from './styles'
 
 export function SectionContent({ section }: { section: Section }) {
-  const setPaneRatio = useMenuStore(s => s.setPaneRatio)
-  const moveBlock = useMenuStore(s => s.moveBlock)
-  const selectSection = useMenuStore(s => s.selectSection)
-  const setActivePaneId = useMenuStore(s => s.setActivePaneId)
-  const activePaneId = useMenuStore(s => s.activePaneId)
-  const selectedSectionId = useMenuStore(s => s.selectedSectionId)
+  const { setPaneRatio, moveBlock, selectSection, setActivePaneId } = useMenuActions()
+  const activePaneId = useActivePaneId()
+  const selectedSectionId = useSelectedSectionId()
 
   if (section.panes.length === 1) {
     const pane = section.panes[0]
@@ -26,7 +24,7 @@ export function SectionContent({ section }: { section: Section }) {
         }}
       >
         <div
-          className={['pane-container', isActive && 'active'].filter(Boolean).join(' ')}
+          className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
           onClick={(e) => {
             e.stopPropagation()
             selectSection(section.id)
@@ -34,7 +32,7 @@ export function SectionContent({ section }: { section: Section }) {
           }}
         >
           {pane.blocks.length === 0 ? (
-            <div className="pane-empty">Drop blocks here</div>
+            <div className={PANE_EMPTY}>Drop blocks here</div>
           ) : (
             pane.blocks.map((block, index) => (
               <BlockRenderer key={block.id} block={block} index={index} />
@@ -50,11 +48,9 @@ export function SectionContent({ section }: { section: Section }) {
     <Group
       orientation="horizontal"
       onLayoutChanged={(layout: Layout) => {
-        console.log(layout)
         const sizes = Object.values(layout)
         const total = sizes.reduce((a: number, b: number) => a + b, 0)
         const ratios = sizes.map((s: number) => s / total)
-        console.log('New ratios:', ratios)
         setPaneRatio(section.id, ratios)
       }}
     >
@@ -73,7 +69,7 @@ export function SectionContent({ section }: { section: Section }) {
                 }}
               >
                 <div
-                  className={['pane-container', isActive && 'active'].filter(Boolean).join(' ')}
+                  className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
                   onClick={(e) => {
                     e.stopPropagation()
                     selectSection(section.id)
@@ -81,7 +77,7 @@ export function SectionContent({ section }: { section: Section }) {
                   }}
                 >
                   {pane.blocks.length === 0 ? (
-                    <div className="pane-empty">Drop blocks here</div>
+                    <div className={PANE_EMPTY}>Drop blocks here</div>
                   ) : (
                     pane.blocks.map((block, index) => (
                       <BlockRenderer key={block.id} block={block} index={index} />

@@ -1,5 +1,4 @@
-import { useMenuStore } from '../../store/menuStore'
-import './GlobalTypographyPanel.css'
+import { useMenuActions, useTypography } from '../../store/menuStore'
 
 const SCALE_STEPS = [
   { label: 'Nho', value: 0.8 },
@@ -10,17 +9,15 @@ const SCALE_STEPS = [
 ]
 
 export function GlobalTypographyPanel() {
-  const scaleFactor = useMenuStore(s => s.doc.typography.scaleFactor)
-  const lineHeight = useMenuStore(s => s.doc.typography.lineHeight)
-  const setScale = useMenuStore(s => s.setGlobalScaleFactor)
-  const setLineHeight = useMenuStore(s => s.setGlobalLineHeight)
+  const { scaleFactor, lineHeight } = useTypography()
+  const { setGlobalScaleFactor: setScale, setGlobalLineHeight: setLineHeight } = useMenuActions()
 
   const scaleIndex = SCALE_STEPS.findIndex(s => s.value === scaleFactor)
 
   return (
-    <div className="global-typography-panel">
-      <div className="typo-control">
-        <label className="typo-label">CO CHU</label>
+    <div className="flex flex-col gap-4 py-3">
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.5px]">CO CHU</label>
         <input
           type="range"
           min={0}
@@ -28,17 +25,17 @@ export function GlobalTypographyPanel() {
           step={1}
           value={scaleIndex >= 0 ? scaleIndex : 2}
           onChange={(e) => setScale(SCALE_STEPS[+e.target.value].value)}
-          className="typo-slider"
+          className="w-full cursor-pointer accent-green-500"
         />
-        <div className="typo-slider-labels">
+        <div className="flex justify-between text-[11px] text-slate-400">
           <span>Nho</span>
           <span>Trung binh</span>
           <span>Sieu lon</span>
         </div>
       </div>
 
-      <div className="typo-control">
-        <label className="typo-label">KHOANG CACH DONG</label>
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.5px]">KHOANG CACH DONG</label>
         <input
           type="range"
           min={1.0}
@@ -46,9 +43,9 @@ export function GlobalTypographyPanel() {
           step={0.1}
           value={lineHeight}
           onChange={(e) => setLineHeight(+e.target.value)}
-          className="typo-slider"
+          className="w-full cursor-pointer accent-green-500"
         />
-        <div className="typo-slider-labels">
+        <div className="flex justify-between text-[11px] text-slate-400">
           <span>1.0</span>
           <span>2.0</span>
         </div>

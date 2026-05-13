@@ -1,7 +1,6 @@
-import { useMenuStore } from '../../store/menuStore'
+import { useMenuActions, usePageConfig, useSelectedArea } from '../../store/menuStore'
 import type { PageSizePreset, SectionPreset } from '../../store/types'
 import { GlobalTypographyPanel } from './GlobalTypographyPanel'
-import './CanvasToolbar.css'
 
 const SECTION_PRESETS: { preset: SectionPreset; label: string }[] = [
   { preset: 'full_width', label: 'Full Width' },
@@ -15,57 +14,65 @@ const PAGE_PRESETS: { preset: PageSizePreset; label: string }[] = [
   { preset: 'A3', label: 'A3' },
 ]
 
-export function CanvasToolbar() {
-  const addSection     = useMenuStore(s => s.addSection)
-  const addArea        = useMenuStore(s => s.addArea)
-  const deleteArea     = useMenuStore(s => s.deleteArea)
-  const moveAreaUp     = useMenuStore(s => s.moveAreaUp)
-  const moveAreaDown   = useMenuStore(s => s.moveAreaDown)
-  const setAreaHeight  = useMenuStore(s => s.setAreaHeight)
-  const setGridCols    = useMenuStore(s => s.setGridCols)
-  const gridCols       = useMenuStore(s => s.doc.grid.cols)
-  const pagePreset     = useMenuStore(s => s.doc.page.preset)
-  const pagePadding    = useMenuStore(s => s.doc.page.padding)
-  const setPagePreset  = useMenuStore(s => s.setPagePreset)
-  const setPagePadding = useMenuStore(s => s.setPagePadding)
-  const areas          = useMenuStore(s => s.doc.areas)
-  const selectedAreaId = useMenuStore(s => s.selectedAreaId)
+const LABEL = 'text-xs font-semibold text-slate-500'
+const GROUP = 'flex items-center gap-1.5'
+const DIVIDER = 'w-px h-5 bg-slate-200'
+const ADD_BTN =
+  'px-2.5 py-1 border border-slate-200 rounded bg-white text-xs cursor-pointer text-slate-600 transition-all duration-100 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-500'
+const ADD_FIXED =
+  'px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-100 border border-amber-300 bg-amber-50 text-amber-900 hover:border-amber-400 hover:bg-amber-100 hover:text-amber-950'
+const ADD_LIST =
+  'px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-100 border border-blue-400 bg-blue-50 text-blue-900 hover:border-blue-500 hover:bg-blue-100 hover:text-blue-950'
+const BTN_SM =
+  'w-6 h-6 border border-slate-200 rounded bg-white text-xs cursor-pointer text-slate-600 flex items-center justify-center transition-all duration-100 hover:border-blue-500 hover:bg-blue-50'
+const BTN_SM_DANGER =
+  'w-6 h-6 border border-slate-200 rounded bg-white text-xs cursor-pointer text-slate-600 flex items-center justify-center transition-all duration-100 hover:border-red-500 hover:bg-red-50 hover:text-red-600'
+const NUM_INPUT =
+  'h-7 border border-slate-200 rounded px-1 text-xs text-slate-600 text-center focus:outline-none focus:border-blue-500'
+const SELECT =
+  'h-7 border border-slate-200 rounded px-1.5 text-xs text-slate-600 bg-white focus:outline-none focus:border-blue-500'
+const COL_BTN =
+  'w-7 h-7 border border-slate-200 rounded bg-white text-xs font-semibold cursor-pointer text-slate-600 transition-all duration-100 hover:border-blue-500'
+const COL_BTN_ACTIVE =
+  'w-7 h-7 border rounded text-xs font-semibold cursor-pointer transition-all duration-100 bg-blue-500 border-blue-500 text-white'
 
-  const selectedArea = areas.find(a => a.id === selectedAreaId)
+export function CanvasToolbar() {
+  const {
+    addSection,
+    addArea,
+    deleteArea,
+    moveAreaUp,
+    moveAreaDown,
+    setAreaHeight,
+    setPagePreset,
+    setPagePadding,
+  } = useMenuActions()
+  const { preset: pagePreset, padding: pagePadding } = usePageConfig()
+  const selectedArea = useSelectedArea()
 
   return (
-    <div className="canvas-toolbar">
+    <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-slate-200 flex-wrap">
       {/* Areas management */}
-      <div className="toolbar-group">
-        <label className="toolbar-label">Add Area:</label>
-        <button
-          className="toolbar-add-btn toolbar-add-fixed"
-          onClick={() => addArea('Title', 'fixed')}
-        >
-          + Fixed
-        </button>
-        <button
-          className="toolbar-add-btn toolbar-add-list"
-          onClick={() => addArea('Menu Items', 'list')}
-        >
-          + List
-        </button>
+      <div className={GROUP}>
+        <label className={LABEL}>Add Area:</label>
+        <button className={ADD_FIXED} onClick={() => addArea('Title', 'fixed')}>+ Fixed</button>
+        <button className={ADD_LIST} onClick={() => addArea('Menu Items', 'list')}>+ List</button>
       </div>
 
       {/* Area controls when selected */}
       {selectedArea && (
         <>
-          <div className="toolbar-divider" />
-          <div className="toolbar-group">
-            <label className="toolbar-label">Area [{selectedArea.name}]:</label>
-            <button className="toolbar-btn-sm" onClick={() => moveAreaUp(selectedArea.id)} title="Move area up">↑</button>
-            <button className="toolbar-btn-sm" onClick={() => moveAreaDown(selectedArea.id)} title="Move area down">↓</button>
-            <button className="toolbar-btn-sm danger" onClick={() => deleteArea(selectedArea.id)} title="Delete area">✕</button>
+          <div className={DIVIDER} />
+          <div className={GROUP}>
+            <label className={LABEL}>Area [{selectedArea.name}]:</label>
+            <button className={BTN_SM} onClick={() => moveAreaUp(selectedArea.id)} title="Move area up">↑</button>
+            <button className={BTN_SM} onClick={() => moveAreaDown(selectedArea.id)} title="Move area down">↓</button>
+            <button className={BTN_SM_DANGER} onClick={() => deleteArea(selectedArea.id)} title="Delete area">✕</button>
             {selectedArea.type === 'list' && (
               <>
-                <label className="toolbar-label" style={{ marginLeft: 8 }}>Height:</label>
+                <label className={`${LABEL} ml-2`}>Height:</label>
                 <select
-                  className="toolbar-select"
+                  className={SELECT}
                   value={selectedArea.height === 'auto' ? 'auto' : 'custom'}
                   onChange={(e) => {
                     if (e.target.value === 'auto') {
@@ -85,23 +92,22 @@ export function CanvasToolbar() {
                     max={2000}
                     value={selectedArea.height}
                     onChange={(e) => setAreaHeight(selectedArea.id, Number(e.target.value))}
-                    className="toolbar-num-input"
-                    style={{ width: 60 }}
+                    className={`${NUM_INPUT} w-[60px]`}
                   />
                 )}
               </>
             )}
           </div>
 
-          <div className="toolbar-divider" />
+          <div className={DIVIDER} />
 
           {/* Add sections to selected area */}
-          <div className="toolbar-group">
-            <label className="toolbar-label">Add Section:</label>
+          <div className={GROUP}>
+            <label className={LABEL}>Add Section:</label>
             {SECTION_PRESETS.map(({ preset, label }) => (
               <button
                 key={preset}
-                className="toolbar-add-btn"
+                className={ADD_BTN}
                 onClick={() => addSection(selectedArea.id, preset)}
               >
                 + {label}
@@ -111,29 +117,14 @@ export function CanvasToolbar() {
         </>
       )}
 
-      <div className="toolbar-divider" />
+      <div className={DIVIDER} />
 
-      <div className="toolbar-group">
-        <label className="toolbar-label">Grid Cols:</label>
-        {([1, 2, 3, 4] as const).map(col => (
-          <button
-            key={col}
-            className={`toolbar-col-btn ${gridCols === col ? 'active' : ''}`}
-            onClick={() => setGridCols(col)}
-          >
-            {col}
-          </button>
-        ))}
-      </div>
-
-      <div className="toolbar-divider" />
-
-      <div className="toolbar-group">
-        <label className="toolbar-label">Page Size:</label>
+      <div className={GROUP}>
+        <label className={LABEL}>Page Size:</label>
         {PAGE_PRESETS.map(({ preset, label }) => (
           <button
             key={preset}
-            className={`toolbar-col-btn ${pagePreset === preset ? 'active' : ''}`}
+            className={pagePreset === preset ? COL_BTN_ACTIVE : COL_BTN}
             onClick={() => setPagePreset(preset)}
           >
             {label}
@@ -141,12 +132,12 @@ export function CanvasToolbar() {
         ))}
       </div>
 
-      <div className="toolbar-divider" />
+      <div className={DIVIDER} />
 
-      <div className="toolbar-group">
-        <label className="toolbar-label">Padding (mm):</label>
+      <div className={GROUP}>
+        <label className={LABEL}>Padding (mm):</label>
         {(['top', 'right', 'bottom', 'left'] as const).map(side => (
-          <label key={side} className="toolbar-label" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <label key={side} className={`${LABEL} flex items-center gap-0.5`}>
             {side[0].toUpperCase()}
             <input
               type="number"
@@ -154,17 +145,16 @@ export function CanvasToolbar() {
               max={50}
               value={pagePadding[side]}
               onChange={e => setPagePadding({ [side]: Number(e.target.value) })}
-              className="toolbar-num-input"
-              style={{ width: 40 }}
+              className={`${NUM_INPUT} w-10`}
             />
           </label>
         ))}
       </div>
 
-      <div className="toolbar-divider" />
+      <div className={DIVIDER} />
 
-      <div className="toolbar-group">
-        <label className="toolbar-label">Typography:</label>
+      <div className={GROUP}>
+        <label className={LABEL}>Typography:</label>
         <GlobalTypographyPanel />
       </div>
     </div>

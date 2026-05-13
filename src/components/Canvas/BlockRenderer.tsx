@@ -1,10 +1,17 @@
-﻿import { useSortable } from '@dnd-kit/react/sortable'
+import { useSortable } from '@dnd-kit/react/sortable'
 import { useRef } from 'react'
-import { useMenuStore } from '../../store/menuStore'
+import { useMenuActions, useSelectedBlockId } from '../../store/menuStore'
 import type { Block, HeadingBlock, SubheadingBlock, MenuBlock, ImageBlock, LogoNameBlock, MenuItem } from '../../store/types'
 import { LazyRichTextInput as RichTextInput } from '../RichTextInput/RichTextInput'
 import type { JSONContent } from '@tiptap/react'
+import { cx } from './styles'
 import './BlockRenderer.css'
+
+const BLOCK_ITEM_BASE =
+  'border border-transparent rounded text-[13px] cursor-pointer transition-all duration-100 hover:border-slate-200 hover:bg-slate-50 [&:hover_.block-drag-handle]:opacity-100'
+const BLOCK_ITEM_SELECTED = 'border-blue-500 bg-blue-50 hover:border-blue-500 hover:bg-blue-50'
+const BLOCK_ITEM_LOCKED = 'opacity-70 cursor-default'
+const BLOCK_ITEM_DRAGGING = 'opacity-40 border-blue-500'
 
 export function BlockRenderer({ block, index }: { block: Block; index: number }) {
   const { ref, isDragging } = useSortable({
@@ -15,19 +22,19 @@ export function BlockRenderer({ block, index }: { block: Block; index: number })
     disabled: block.locked,
   })
 
-  const selectBlock = useMenuStore(s => s.selectBlock)
-  const selectedBlockId = useMenuStore(s => s.selectedBlockId)
+  const { selectBlock } = useMenuActions()
+  const selectedBlockId = useSelectedBlockId()
   const isSelected = selectedBlockId === block.id
 
   return (
     <div
       ref={ref}
-      className={[
-        'block-item',
-        isSelected && 'selected',
-        block.locked && 'locked',
-        isDragging && 'dragging',
-      ].filter(Boolean).join(' ')}
+      className={cx(
+        BLOCK_ITEM_BASE,
+        isSelected && BLOCK_ITEM_SELECTED,
+        block.locked && BLOCK_ITEM_LOCKED,
+        isDragging && BLOCK_ITEM_DRAGGING,
+      )}
       style={{
         marginTop: block.marginTop > 0 ? `${block.marginTop}px` : undefined,
         marginBottom: block.marginBottom > 0 ? `${block.marginBottom}px` : undefined,
@@ -37,8 +44,8 @@ export function BlockRenderer({ block, index }: { block: Block; index: number })
         selectBlock(block.id)
       }}
     >
-      <div className="block-item-row">
-        <div className="block-item-content">
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0">
           <BlockVisual block={block} />
         </div>
       </div>
@@ -62,9 +69,9 @@ function BlockVisual({ block }: { block: Block }) {
 }
 
 function HeadingVisual({ block }: { block: HeadingBlock }) {
-  const updateBlock = useMenuStore(s => s.updateBlock)
+  const { updateBlock } = useMenuActions()
   return (
-    <div className="block-visual heading-visual">
+    <div className="w-full">
       <RichTextInput
         content={block.content}
         onUpdate={(json) => updateBlock(block.id, { content: json })}
@@ -77,9 +84,9 @@ function HeadingVisual({ block }: { block: HeadingBlock }) {
 }
 
 function SubheadingVisual({ block }: { block: SubheadingBlock }) {
-  const updateBlock = useMenuStore(s => s.updateBlock)
+  const { updateBlock } = useMenuActions()
   return (
-    <div className="block-visual subheading-visual">
+    <div className="w-full">
       <RichTextInput
         content={block.content}
         onUpdate={(json) => updateBlock(block.id, { content: json })}
@@ -92,7 +99,7 @@ function SubheadingVisual({ block }: { block: SubheadingBlock }) {
 }
 
 function MenuVisual({ block }: { block: MenuBlock }) {
-  const updateBlock = useMenuStore(s => s.updateBlock)
+  const { updateBlock } = useMenuActions()
 
   const addItem = () => {
     const emptyItem: MenuItem = {
@@ -114,7 +121,7 @@ function MenuVisual({ block }: { block: MenuBlock }) {
   }
 
   return (
-    <div className="block-visual menu-visual">
+    <div className="w-full flex flex-col gap-1.5">
       <RichTextInput
         content={block.title}
         onUpdate={(json) => updateBlock(block.id, { title: json })}
@@ -122,48 +129,48 @@ function MenuVisual({ block }: { block: MenuBlock }) {
         className="menu-title-input"
         singleLine
       />
-      <div className="menu-items-list">
+      <div className="flex flex-col gap-1">
         {block.items.map((item, idx) => (
-          <div key={idx} className="menu-item-row">
-          
-
-          <div className="menu-item-name">
-            <RichTextInput
-              content={item.name}
-              onUpdate={(json) => updateItem(idx, 'name', json)}
-              placeholder="Item name"
-              
-              singleLine
-            />
+          <div key={idx} className="flex w-full items-center justify-between gap-1.5 group">
+            <div className="flex-1">
+              <RichTextInput
+                content={item.name}
+                onUpdate={(json) => updateItem(idx, 'name', json)}
+                placeholder="Item name"
+                className="menu-item-name-input"
+                singleLine
+              />
             </div>
-            
-            <div className="menu-item-price">
-            <RichTextInput
-              content={item.price}
-              onUpdate={(json) => updateItem(idx, 'price', json)}
-              placeholder="Price"
-              className="menu-item-price"
-              singleLine
-            />
+            <div className="w-[70px]">
+              <RichTextInput
+                content={item.price}
+                onUpdate={(json) => updateItem(idx, 'price', json)}
+                placeholder="Price"
+                className="menu-item-price-input"
+                singleLine
+              />
             </div>
-            {/* <RichTextInput
-              content={item.unit}
-              onUpdate={(json) => updateItem(idx, 'unit', json)}
-              placeholder="Unit"
-              className="menu-item-unit"
-              singleLine
-            /> */}
-            <button className="menu-item-remove" onClick={(e) => { e.stopPropagation(); removeItem(idx) }}>x</button>
+            <button
+              className="bg-transparent border-0 text-red-600 cursor-pointer text-sm px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-red-50"
+              onClick={(e) => { e.stopPropagation(); removeItem(idx) }}
+            >
+              x
+            </button>
           </div>
         ))}
       </div>
-      <button className="menu-add-item-btn" onClick={(e) => { e.stopPropagation(); addItem() }}>+ Add Item</button>
+      <button
+        className="self-start bg-transparent border border-dashed border-slate-300 text-slate-500 text-xs px-3 py-1 rounded cursor-pointer mt-1 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50"
+        onClick={(e) => { e.stopPropagation(); addItem() }}
+      >
+        + Add Item
+      </button>
     </div>
   )
 }
 
 function ImageVisual({ block }: { block: ImageBlock }) {
-  const updateBlock = useMenuStore(s => s.updateBlock)
+  const { updateBlock } = useMenuActions()
   const fileRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,14 +186,22 @@ function ImageVisual({ block }: { block: ImageBlock }) {
   }
 
   return (
-    <div className="block-visual image-visual" onClick={handleClick}>
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+    <div className="w-full cursor-pointer rounded-md overflow-hidden" onClick={handleClick}>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
       {block.url ? (
-        <img src={block.url} alt={block.alt} className="image-preview" style={{ objectFit: block.fit, aspectRatio: block.aspectRatio }} />
+        <img
+          src={block.url}
+          alt={block.alt}
+          className="w-full block rounded-md"
+          style={{ objectFit: block.fit, aspectRatio: block.aspectRatio }}
+        />
       ) : (
-        <div className="image-placeholder" style={{ aspectRatio: block.aspectRatio }}>
-          <span className="image-placeholder-icon">image</span>
-          <span className="image-placeholder-text">Click to add image</span>
+        <div
+          className="w-full bg-slate-100 border-2 border-dashed border-slate-300 rounded-md flex flex-col items-center justify-center gap-2 min-h-[120px]"
+          style={{ aspectRatio: block.aspectRatio }}
+        >
+          <span className="text-[28px] opacity-50">image</span>
+          <span className="text-xs text-slate-400">Click to add image</span>
         </div>
       )}
     </div>
@@ -194,7 +209,7 @@ function ImageVisual({ block }: { block: ImageBlock }) {
 }
 
 function LogoNameVisual({ block }: { block: LogoNameBlock }) {
-  const updateBlock = useMenuStore(s => s.updateBlock)
+  const { updateBlock } = useMenuActions()
   const fileRef = useRef<HTMLInputElement>(null)
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,17 +219,27 @@ function LogoNameVisual({ block }: { block: LogoNameBlock }) {
     updateBlock(block.id, { logoUrl: url })
   }
 
+  const isVertical = block.layout === 'vertical'
+  // `logo-name-vertical` class kept so the CSS file can apply `text-align: center`
+  // to the ProseMirror children (which we can't reach via Tailwind utilities)
+  const wrapperBase = isVertical
+    ? 'w-full flex flex-col items-center text-center gap-3 py-2 logo-name-vertical'
+    : 'w-full flex items-center gap-3 py-2'
+  const logoSize = isVertical ? 'w-16 h-16' : 'w-12 h-12'
+
   return (
-    <div className={`block-visual logo-name-visual layout-${block.layout}`}>
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoChange} />
-      <div className="logo-image-area" onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}>
+    <div className={wrapperBase}>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+      <div className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}>
         {block.logoUrl ? (
-          <img src={block.logoUrl} alt="Logo" className="logo-img" />
+          <img src={block.logoUrl} alt="Logo" className={`${logoSize} object-contain rounded-md`} />
         ) : (
-          <div className="logo-placeholder">Logo</div>
+          <div className={`${logoSize} bg-slate-100 border-2 border-dashed border-slate-300 rounded-md flex items-center justify-center text-[10px] text-slate-400`}>
+            Logo
+          </div>
         )}
       </div>
-      <div className="logo-text-area">
+      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
         <RichTextInput
           content={block.brandName}
           onUpdate={(json) => updateBlock(block.id, { brandName: json })}

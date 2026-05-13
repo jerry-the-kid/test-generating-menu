@@ -1,27 +1,25 @@
 import { useEffect } from 'react'
-import { useMenuStore } from '../store/menuStore'
+import { useMenuActions, useSelectedAreaId, useSelectedBlockId, useSelectedSectionId } from '../store/menuStore'
 
 export function useKeyboardShortcuts() {
-  const deleteBlock = useMenuStore(s => s.deleteBlock)
-  const deleteSection = useMenuStore(s => s.deleteSection)
-  const deleteArea = useMenuStore(s => s.deleteArea)
-  const selectedBlockId = useMenuStore(s => s.selectedBlockId)
-  const selectedSectionId = useMenuStore(s => s.selectedSectionId)
-  const selectedAreaId = useMenuStore(s => s.selectedAreaId)
+  const { deleteBlock, deleteSection, deleteArea, undo, redo } = useMenuActions()
+  const selectedBlockId = useSelectedBlockId()
+  const selectedSectionId = useSelectedSectionId()
+  const selectedAreaId = useSelectedAreaId()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       // Undo: Ctrl+Z / Cmd+Z
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault()
-        useMenuStore.temporal.getState().undo()
+        undo()
       }
 
       // Redo: Ctrl+Shift+Z / Cmd+Shift+Z or Ctrl+Y
       if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
           (e.ctrlKey && e.key === 'y')) {
         e.preventDefault()
-        useMenuStore.temporal.getState().redo()
+        redo()
       }
 
       // Delete: remove selected block or section
@@ -45,5 +43,5 @@ export function useKeyboardShortcuts() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedBlockId, selectedSectionId, selectedAreaId, deleteBlock, deleteSection, deleteArea])
+  }, [selectedBlockId, selectedSectionId, selectedAreaId, deleteBlock, deleteSection, deleteArea, undo, redo])
 }

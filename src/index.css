@@ -1,12 +1,4 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-* {
-  margin: 0;
-}
+@import "tailwindcss";
 
 html,
 body,
@@ -23,10 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button {
-  font: inherit;
-}
-
+/* react-resizable-panels handle — uses a data attribute the library injects */
 .pane-resize-handle {
   width: 4px;
   background: #e2e8f0;

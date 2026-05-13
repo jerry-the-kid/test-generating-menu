@@ -1,14 +1,13 @@
 import { BlockPalette } from '../Palette/BlockPalette'
 import { Canvas } from '../Canvas/Canvas'
-import './MenuBuilder.css'
 import { PropertyPanel } from '../PropertyPanel/PropertyPanel'
 
 export function MenuBuilder() {
   return (
-    <div className="menu-builder">
+    <div className="h-screen w-screen overflow-hidden flex flex-row">
       <BlockPalette />
       <Canvas />
-      <PropertyPanel/>  
+      <PropertyPanel />
     </div>
   )
 }
