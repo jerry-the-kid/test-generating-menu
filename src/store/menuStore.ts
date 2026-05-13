@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
-import type { Area, AreaType, Block, BlockType, MenuDoc, Page, PageConfig, PageSizePreset, Section, SectionPreset } from './types'
+import type { Area, AreaAlignment, AreaSpacing, AreaType, Block, BlockType, MenuDoc, Page, PageConfig, PageSizePreset, Section, SectionPreset } from './types'
 import { createArea, createBlock, createEmptyDoc, createId, createSection, findBlockInDoc, findSectionInDoc, MM_TO_PX, resolvePageDimensions } from './helpers'
 
 interface MenuStoreState {
@@ -23,6 +23,11 @@ interface MenuStoreActions {
   moveAreaUp: (areaId: string) => void
   moveAreaDown: (areaId: string) => void
   setAreaHeight: (areaId: string, height: 'auto' | number) => void
+  setAreaGap: (areaId: string, gap: number) => void
+  setAreaWidthPercent: (areaId: string, percent: number) => void
+  setAreaAlignment: (areaId: string, alignment: AreaAlignment) => void
+  setAreaMargin: (areaId: string, patch: Partial<AreaSpacing>) => void
+  setAreaPadding: (areaId: string, patch: Partial<AreaSpacing>) => void
   selectArea: (areaId: string | null) => void
 
   // Section
@@ -101,6 +106,31 @@ export const useMenuStore = create<MenuStoreState>()(
         setAreaHeight: (areaId, height) => set((state) => {
           const area = state.doc.areas.find((a) => a.id === areaId)
           if (area) area.height = height
+        }),
+
+        setAreaGap: (areaId, gap) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) area.gap = Math.max(0, gap)
+        }),
+
+        setAreaWidthPercent: (areaId, percent) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) area.widthPercent = Math.max(10, Math.min(100, percent))
+        }),
+
+        setAreaAlignment: (areaId, alignment) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) area.alignment = alignment
+        }),
+
+        setAreaMargin: (areaId, patch) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) Object.assign(area.margin, patch)
+        }),
+
+        setAreaPadding: (areaId, patch) => set((state) => {
+          const area = state.doc.areas.find((a) => a.id === areaId)
+          if (area) Object.assign(area.padding, patch)
         }),
 
         selectArea: (areaId) => set((state) => {

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useMenuActions, useSelectedAreaId } from '../../store/menuStore'
 import type { Area, Section } from '../../store/types'
 import { SortableSection } from './SortableSection'
@@ -13,10 +14,9 @@ interface AreaRendererProps {
   area: Area
   sectionIds: string[]
   sectionById: Map<string, Section>
-  gapPx: number
 }
 
-export function AreaRenderer({ area, sectionIds, sectionById, gapPx }: AreaRendererProps) {
+export function AreaRenderer({ area, sectionIds, sectionById }: AreaRendererProps) {
   const { selectArea } = useMenuActions()
   const selectedAreaId = useSelectedAreaId()
   const isSelected = selectedAreaId === area.id
@@ -25,6 +25,24 @@ export function AreaRenderer({ area, sectionIds, sectionById, gapPx }: AreaRende
     .map((id) => sectionById.get(id))
     .filter((s): s is Section => !!s)
 
+  const { alignment, margin, padding, widthPercent, gap } = area
+  const marginLeft = alignment === 'center' || alignment === 'right' ? 'auto' : `${margin.left}px`
+  const marginRight = alignment === 'center' || alignment === 'left' ? 'auto' : `${margin.right}px`
+
+  const style: CSSProperties = {
+    width: `${widthPercent}%`,
+    marginTop: `${margin.top}px`,
+    marginBottom: `${margin.bottom}px`,
+    marginLeft,
+    marginRight,
+    paddingTop: `${padding.top}px`,
+    paddingRight: `${padding.right}px`,
+    paddingBottom: `${padding.bottom}px`,
+    paddingLeft: `${padding.left}px`,
+    gap: `${gap}px`,
+    ...(area.height !== 'auto' ? { height: `${area.height}px`, overflow: 'hidden' } : {}),
+  }
+
   return (
     <div
       className={cx(
@@ -32,10 +50,7 @@ export function AreaRenderer({ area, sectionIds, sectionById, gapPx }: AreaRende
         area.type === 'fixed' ? AREA_FRAME_FIXED : AREA_FRAME_LIST,
         isSelected && AREA_SELECTED,
       )}
-      style={{
-        ...(area.height !== 'auto' ? { height: `${area.height}px`, overflow: 'hidden' } : {}),
-        gap: `${gapPx}px`,
-      }}
+      style={style}
       onClick={(e) => {
         e.stopPropagation()
         selectArea(area.id)
@@ -54,7 +69,7 @@ export function AreaRenderer({ area, sectionIds, sectionById, gapPx }: AreaRende
         </span>
         <span className="text-[11px] text-slate-500 font-medium">{area.name}</span>
       </div>
-      <div className="flex flex-col flex-1 overflow-visible" style={{ gap: `${gapPx}px` }}>
+      <div className="flex flex-col flex-1 overflow-visible" style={{ gap: `${gap}px` }}>
         {sections.map((section, index) => (
           <SortableSection key={section.id} section={section} index={index} />
         ))}

@@ -141,7 +141,6 @@ export function Canvas() {
                       area={area}
                       sectionIds={ac.sectionIds}
                       sectionById={sectionById}
-                      gapPx={doc.page.gap}
                     />
                   );
                 })}

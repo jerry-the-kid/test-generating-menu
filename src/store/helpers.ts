@@ -8,6 +8,7 @@ export function createId(): string {
 
 export const MM_TO_PX = 3.7795 // 96 DPI
 export const DEFAULT_PAGE_GAP_PX = 16
+export const DEFAULT_AREA_GAP_PX = 8
 
 export const PAGE_SIZE_DIMS: Record<PageSizePreset, { width: number; height: number }> = {
   A4: { width: 210, height: 297 }, // mm
@@ -52,6 +53,11 @@ export function createArea(name: string, type: AreaType, height: 'auto' | number
     name,
     type,
     height,
+    gap: DEFAULT_AREA_GAP_PX,
+    widthPercent: 100,
+    alignment: 'left',
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
     sections: [],
   }
 }

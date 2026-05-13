@@ -91,12 +91,34 @@ export interface Section {
 
 export type AreaType = 'fixed' | 'list'
 
+export type AreaAlignment = 'left' | 'center' | 'right'
+
+export interface AreaSpacing {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
 export interface Area {
   id: string
   name: string
   type: AreaType
   /** Height in px. 'auto' means fill remaining page space */
   height: 'auto' | number
+  /** Gap in px between sections inside this area */
+  gap: number
+  /** Width as a percentage 10–100 of the available column width */
+  widthPercent: number
+  /**
+   * Horizontal alignment within the page column.
+   * Maps to: left → mr-auto, center → mx-auto, right → ml-auto.
+   */
+  alignment: AreaAlignment
+  /** Outer margin in px. Sides overridden by 'auto' depending on alignment. */
+  margin: AreaSpacing
+  /** Inner padding in px */
+  padding: AreaSpacing
   sections: Section[]
 }
 

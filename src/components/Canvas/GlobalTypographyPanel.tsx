@@ -15,7 +15,7 @@ export function GlobalTypographyPanel() {
   const scaleIndex = SCALE_STEPS.findIndex(s => s.value === scaleFactor)
 
   return (
-    <div className="flex flex-col gap-4 py-3">
+    <div className="flex flex-row gap-4 py-3">
       <div className="flex flex-col gap-1">
         <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.5px]">CO CHU</label>
         <input
