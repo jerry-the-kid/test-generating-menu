@@ -1,20 +1,19 @@
-import { useRef, useCallback, useState, useMemo } from "react";
 import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { MM_TO_PX, resolvePageDimensions } from "../../store/helpers";
 import {
   useDoc,
   useMenuActions,
   usePages,
   useTypography,
 } from "../../store/menuStore";
-import { resolvePageDimensions, MM_TO_PX } from "../../store/helpers";
-import { AreaRenderer } from "./AreaRenderer";
-import { SectionContent } from "./SectionContent";
-import { SectionHeader } from "./SectionHeader";
-import { CanvasToolbar } from "./CanvasToolbar";
-import { PageTabs } from "./PageTabs";
-import { MeasurementLayer } from "./MeasurementLayer";
 import type { Page, Section } from "../../store/types";
+import { AreaRenderer } from "./AreaRenderer";
+import { CanvasToolbar } from "./CanvasToolbar";
+import { MeasurementLayer } from "./MeasurementLayer";
+import { PageTabs } from "./PageTabs";
+import { SectionContent } from "./SectionContent";
 import { SECTION_FRAME, SECTION_FRAME_DRAGGING, cx } from "./styles";
 
 export function Canvas() {
