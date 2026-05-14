@@ -100,6 +100,7 @@ export function createSection(preset: SectionPreset): Section {
     locked: false,
     type: preset,
     widthPercent: 100,
+    height: 'min-content',
     gap: DEFAULT_SECTION_GAP_PX,
     alignment: 'left',
     margin: defaultSpacing(),

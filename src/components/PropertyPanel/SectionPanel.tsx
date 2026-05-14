@@ -1,10 +1,11 @@
-import { useDoc, useMenuActions } from '../../store/menuStore'
+import { useDoc, useListAreaResolvedHeight, useMenuActions, useSectionMeasuredHeight } from '../../store/menuStore'
 import { findSectionInDoc } from '../../store/helpers'
 import { formatSectionType } from '../Canvas/styles'
 import type { Section } from '../../store/types'
 import {
   AlignmentControl,
   GapControl,
+  HeightControl,
   marginAutoSides,
   PANEL_LABEL,
   PANEL_SECTION_DIVIDER,
@@ -24,6 +25,7 @@ export function SectionPanel({ section }: { section: Section }) {
     moveSectionDown,
     deleteSection,
     setSectionWidthPercent,
+    setSectionHeight,
     setSectionGap,
     setSectionAlignment,
     setSectionMargin,
@@ -33,6 +35,16 @@ export function SectionPanel({ section }: { section: Section }) {
   const located = findSectionInDoc(doc, section.id)
   const isFirst = located ? located.sectionIndex === 0 : true
   const isLast = located ? located.sectionIndex >= located.area.sections.length - 1 : true
+  const isListArea = located?.area.type === 'list'
+
+  const measuredHeight = useSectionMeasuredHeight(section.id)
+  const listAreaResolvedHeight = useListAreaResolvedHeight()
+  const uncheckInitialPercent = (() => {
+    if (!measuredHeight || !listAreaResolvedHeight || listAreaResolvedHeight <= 0) return 10
+    const raw = (measuredHeight / listAreaResolvedHeight) * 100
+    const rounded = Math.round(raw / 5) * 5
+    return Math.min(100, Math.max(5, rounded))
+  })()
 
   const marginDisabled = marginAutoSides(section.alignment)
 
@@ -75,6 +87,16 @@ export function SectionPanel({ section }: { section: Section }) {
             onChange={(v) => setSectionWidthPercent(section.id, v)}
           />
         </div>
+
+        {isListArea && (
+          <div className={PANEL_SECTION_DIVIDER}>
+            <HeightControl
+              value={section.height}
+              onChange={(v) => setSectionHeight(section.id, v)}
+              uncheckInitialPercent={uncheckInitialPercent}
+            />
+          </div>
+        )}
 
         <AlignmentControl
           value={section.alignment}

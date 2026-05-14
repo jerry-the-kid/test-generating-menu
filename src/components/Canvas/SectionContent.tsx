@@ -66,6 +66,10 @@ export function SectionContent({ section }: Readonly<{ section: Section }>) {
                 key={`sep-${pane.id}`}
                 className="pane-resize-handle"
                 style={{ width: `${section.gap}px` }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  e.nativeEvent.stopPropagation()
+                }}
               />
             )}
             <Panel key={pane.id} defaultSize={pane.ratio * 100} minSize={15}>

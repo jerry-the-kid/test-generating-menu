@@ -20,7 +20,7 @@ export function Canvas() {
   const doc = useDoc();
   const pages = usePages();
   const typography = useTypography();
-  const { moveSection, selectSection, selectArea, selectBlock, recalculatePages } = useMenuActions();
+  const { moveSection, selectSection, selectArea, selectBlock, recalculatePages, setSectionMeasuredHeights } = useMenuActions();
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const dims = resolvePageDimensions(doc.page);
@@ -36,9 +36,10 @@ export function Canvas() {
   const handleHeightsChange = useCallback(
     (heights: Map<string, number>) => {
       stableHeights.current = heights;
+      setSectionMeasuredHeights(heights);
       recalculatePages(heights);
     },
-    [recalculatePages],
+    [recalculatePages, setSectionMeasuredHeights],
   );
 
   // useMemo critical: flatMap returns a new array each render — without this,

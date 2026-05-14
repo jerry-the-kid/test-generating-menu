@@ -14,6 +14,10 @@ interface MenuStoreState {
   activePaneId: string | null
   activePanelLevel: PanelLevel | null
 
+  // Runtime measurements (not tracked by undo)
+  sectionMeasuredHeights: Record<string, number>
+  listAreaResolvedHeight: number | null
+
   actions: MenuStoreActions
 }
 
@@ -39,6 +43,7 @@ interface MenuStoreActions {
   deleteSection: (sectionId: string) => void
   setPaneRatio: (sectionId: string, ratios: number[]) => void
   setSectionWidthPercent: (sectionId: string, percent: number) => void
+  setSectionHeight: (sectionId: string, value: 'min-content' | number) => void
   setSectionGap: (sectionId: string, gap: number) => void
   setSectionAlignment: (sectionId: string, alignment: Alignment) => void
   setSectionMargin: (sectionId: string, patch: Partial<Spacing>) => void
@@ -66,6 +71,7 @@ interface MenuStoreActions {
   setPagePadding: (patch: Partial<PageConfig['padding']>) => void
   setPageGap: (gap: number) => void
   recalculatePages: (sectionHeights: Map<string, number>) => void
+  setSectionMeasuredHeights: (heights: Map<string, number>) => void
 
   // Typography
   setGlobalScaleFactor: (factor: number) => void
@@ -85,6 +91,8 @@ export const useMenuStore = create<MenuStoreState>()(
       selectedAreaId: null,
       activePaneId: null,
       activePanelLevel: null,
+      sectionMeasuredHeights: {},
+      listAreaResolvedHeight: null,
 
       actions: {
         addArea: (name, type, height = 'auto') => set((state) => {
@@ -214,6 +222,14 @@ export const useMenuStore = create<MenuStoreState>()(
         setSectionWidthPercent: (sectionId, percent) => set((state) => {
           const result = findSectionInDoc(state.doc, sectionId)
           if (result) result.section.widthPercent = Math.max(10, Math.min(100, percent))
+        }),
+
+        setSectionHeight: (sectionId, value) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          result.section.height = value === 'min-content'
+            ? 'min-content'
+            : Math.max(5, Math.min(100, value))
         }),
 
         setSectionGap: (sectionId, gap) => set((state) => {
@@ -403,12 +419,16 @@ export const useMenuStore = create<MenuStoreState>()(
             ? listAreaAvailableHeight
             : listArea.height
 
+          state.listAreaResolvedHeight = listHeight
+
           const listSectionGroups: string[][] = []
           let currentGroup: string[] = []
           let currentHeight = 0
 
           for (const section of listArea.sections) {
-            const h = sectionHeights.get(section.id) ?? 0
+            const h = typeof section.height === 'number'
+              ? listHeight * (section.height / 100)
+              : (sectionHeights.get(section.id) ?? 0)
             const needed = currentHeight > 0 ? h + gapPx : h
 
             if (currentHeight + needed > listHeight && currentGroup.length > 0) {
@@ -433,6 +453,10 @@ export const useMenuStore = create<MenuStoreState>()(
                 : area.sections.map((s) => s.id),
             })),
           }))
+        }),
+
+        setSectionMeasuredHeights: (heights) => set((state) => {
+          state.sectionMeasuredHeights = Object.fromEntries(heights)
         }),
 
         setGlobalScaleFactor: (factor) => set((state) => {
@@ -469,6 +493,11 @@ export const useSelectedSectionId = () => useMenuStore((s) => s.selectedSectionI
 export const useSelectedAreaId = () => useMenuStore((s) => s.selectedAreaId)
 export const useActivePaneId = () => useMenuStore((s) => s.activePaneId)
 export const useActivePanelLevel = () => useMenuStore((s) => s.activePanelLevel)
+
+export const useSectionMeasuredHeight = (id: string) =>
+  useMenuStore((s) => s.sectionMeasuredHeights[id])
+export const useListAreaResolvedHeight = () =>
+  useMenuStore((s) => s.listAreaResolvedHeight)
 
 export const useSelectedBlock = (): Block | null =>
   useMenuStore((s) => {

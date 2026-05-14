@@ -47,13 +47,66 @@ export function WidthControl({ value, onChange }: { value: number; onChange: (v:
   )
 }
 
+export function HeightControl({
+  value,
+  onChange,
+  uncheckInitialPercent = 10,
+}: Readonly<{
+  value: 'min-content' | number
+  onChange: (v: 'min-content' | number) => void
+  uncheckInitialPercent?: number
+}>) {
+  const isAuto = value === 'min-content'
+  const numericValue = typeof value === 'number' ? value : 100
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <label className={PANEL_LABEL}>Height</label>
+        <span className="text-[11px] text-slate-500 font-medium">
+          {isAuto ? 'min-content' : `${numericValue}%`}
+        </span>
+      </div>
+      <label className="flex items-center gap-1.5 text-[11px] text-slate-600 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={isAuto}
+          onChange={(e) => onChange(e.target.checked ? 'min-content' : uncheckInitialPercent)}
+          className="accent-blue-500 cursor-pointer"
+        />
+        Min-content (auto)
+      </label>
+      {!isAuto && (
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={5}
+            max={100}
+            step={5}
+            value={numericValue}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="flex-1 accent-blue-500 cursor-pointer"
+          />
+          <input
+            type="number"
+            min={5}
+            max={100}
+            value={numericValue}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className={`${PANEL_INPUT} w-14 text-center`}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function AlignmentControl({
   value,
   onChange,
-}: {
+}: Readonly<{
   value: Alignment
   onChange: (a: Alignment) => void
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className={PANEL_LABEL}>Alignment</label>

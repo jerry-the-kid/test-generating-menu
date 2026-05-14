@@ -36,6 +36,9 @@ export function SortableSection({ section, index }: SortableSectionProps) {
 
   const style: CSSProperties = {
     width: `${section.widthPercent}%`,
+    ...(section.height != null && section.height !== 'min-content'
+      ? { height: `${section.height}%` }
+      : {}),
     marginTop: `${section.margin.top}px`,
     marginBottom: `${section.margin.bottom}px`,
     marginLeft,

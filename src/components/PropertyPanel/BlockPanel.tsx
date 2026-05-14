@@ -11,7 +11,7 @@ import {
   WidthControl,
 } from './LayoutControls'
 
-export function BlockPanel({ block }: { block: Block }) {
+export function BlockPanel({ block }: Readonly<{ block: Block }>) {
   const {
     updateBlock,
     setBlockWidthPercent,

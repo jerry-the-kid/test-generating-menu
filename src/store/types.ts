@@ -106,6 +106,9 @@ export interface Section {
   type: SectionPreset
   /** Width as a percentage 10–100 of the area's content width */
   widthPercent: number
+  /** 'min-content' fits content; number is a percentage 10–100 of the parent List area's height.
+   *  Only renders meaningfully when the containing Area is type 'list' with a fixed height. */
+  height: 'min-content' | number
   /** px; vertical block-gap inside each pane AND horizontal inter-pane gap */
   gap: number
   /** Horizontal alignment within the area */
