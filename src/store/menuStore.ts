@@ -381,25 +381,27 @@ export const useMenuStore = create<MenuStoreState>()(
           const paddingTopPx = doc.page.padding.top * MM_TO_PX
           const paddingBottomPx = doc.page.padding.bottom * MM_TO_PX
           const usableHeight = dims.heightPx - paddingTopPx - paddingBottomPx
-          const gapPx = doc.page.gap
+          const pageGapPx = doc.page.gap
 
           let fixedAreasHeight = 0
           for (const area of doc.areas) {
             if (area.type === 'fixed') {
               if (area.height === 'auto') {
-                let areaH = 0
+                let areaH = area.padding.top + area.padding.bottom
+                let sectionsAccum = 0
                 for (const section of area.sections) {
                   const h = sectionHeights.get(section.id) ?? 0
-                  areaH += (areaH > 0 ? h + gapPx : h)
+                  sectionsAccum += (sectionsAccum > 0 ? h + area.gap : h)
                 }
-                fixedAreasHeight += (fixedAreasHeight > 0 ? areaH + gapPx : areaH)
+                areaH += sectionsAccum
+                fixedAreasHeight += (fixedAreasHeight > 0 ? areaH + pageGapPx : areaH)
               } else {
-                fixedAreasHeight += (fixedAreasHeight > 0 ? area.height + gapPx : area.height)
+                fixedAreasHeight += (fixedAreasHeight > 0 ? area.height + pageGapPx : area.height)
               }
             }
           }
 
-          const listAreaAvailableHeight = usableHeight - fixedAreasHeight - (fixedAreasHeight > 0 ? gapPx : 0)
+          const listAreaAvailableHeight = usableHeight - fixedAreasHeight - (fixedAreasHeight > 0 ? pageGapPx : 0)
           const listArea = doc.areas.find((a) => a.type === 'list')
 
           if (!listArea) {
@@ -415,11 +417,12 @@ export const useMenuStore = create<MenuStoreState>()(
             return
           }
 
-          const listHeight = listArea.height === 'auto'
+          const listAreaOuterHeight = listArea.height === 'auto'
             ? listAreaAvailableHeight
             : listArea.height
+          const listContentHeight = listAreaOuterHeight - listArea.padding.top - listArea.padding.bottom
 
-          state.listAreaResolvedHeight = listHeight
+          state.listAreaResolvedHeight = listContentHeight
 
           const listSectionGroups: string[][] = []
           let currentGroup: string[] = []
@@ -427,18 +430,18 @@ export const useMenuStore = create<MenuStoreState>()(
 
           for (const section of listArea.sections) {
             const h = typeof section.height === 'number'
-              ? listHeight * (section.height / 100)
+              ? listContentHeight * (section.height / 100)
               : (sectionHeights.get(section.id) ?? 0)
-            const needed = currentHeight > 0 ? h + gapPx : h
+            const needed = currentHeight > 0 ? h + listArea.gap : h
 
-            if (currentHeight + needed > listHeight && currentGroup.length > 0) {
+            if (currentHeight + needed > listContentHeight && currentGroup.length > 0) {
               listSectionGroups.push(currentGroup)
               currentGroup = []
               currentHeight = 0
             }
 
             currentGroup.push(section.id)
-            currentHeight += (currentHeight > 0 ? h + gapPx : h)
+            currentHeight += (currentHeight > 0 ? h + listArea.gap : h)
           }
           if (currentGroup.length > 0) listSectionGroups.push(currentGroup)
           if (listSectionGroups.length === 0) listSectionGroups.push([])

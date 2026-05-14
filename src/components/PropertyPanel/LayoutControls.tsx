@@ -81,7 +81,7 @@ export function HeightControl({
             type="range"
             min={5}
             max={100}
-            step={5}
+            step={1}
             value={numericValue}
             onChange={(e) => onChange(Number(e.target.value))}
             className="flex-1 accent-blue-500 cursor-pointer"
