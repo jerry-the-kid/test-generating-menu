@@ -17,14 +17,33 @@ export type BlockType =
   | 'image'
   | 'logo_name'
 
+// ─── Spacing & Alignment (shared) ────────────────────
+
+export interface Spacing {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+export type Alignment = 'left' | 'center' | 'right'
+
 // ─── Block Definitions ───────────────────────────────
 
 export interface BaseBlock {
   id: string
   type: BlockType
   locked: boolean
-  marginTop: number
-  marginBottom: number
+  /** Width as a percentage 10–100 of the parent pane */
+  widthPercent: number
+  /** Internal gap in px between multi-child block contents (menu items, logo+name) */
+  gap: number
+  /** Horizontal alignment within the pane (mr-auto / mx-auto / ml-auto) */
+  alignment: Alignment
+  /** Outer margin in px; left/right overridden by 'auto' based on alignment */
+  margin: Spacing
+  /** Inner padding in px */
+  padding: Spacing
 }
 
 export interface HeadingBlock extends BaseBlock {
@@ -85,20 +104,21 @@ export interface Section {
   panes: Pane[]
   locked: boolean
   type: SectionPreset
+  /** Width as a percentage 10–100 of the area's content width */
+  widthPercent: number
+  /** px; vertical block-gap inside each pane AND horizontal inter-pane gap */
+  gap: number
+  /** Horizontal alignment within the area */
+  alignment: Alignment
+  /** Outer margin in px; left/right overridden by 'auto' based on alignment */
+  margin: Spacing
+  /** Inner padding in px */
+  padding: Spacing
 }
 
 // ─── Area ─────────────────────────────────────────────
 
 export type AreaType = 'fixed' | 'list'
-
-export type AreaAlignment = 'left' | 'center' | 'right'
-
-export interface AreaSpacing {
-  top: number
-  right: number
-  bottom: number
-  left: number
-}
 
 export interface Area {
   id: string
@@ -114,13 +134,17 @@ export interface Area {
    * Horizontal alignment within the page column.
    * Maps to: left → mr-auto, center → mx-auto, right → ml-auto.
    */
-  alignment: AreaAlignment
+  alignment: Alignment
   /** Outer margin in px. Sides overridden by 'auto' depending on alignment. */
-  margin: AreaSpacing
+  margin: Spacing
   /** Inner padding in px */
-  padding: AreaSpacing
+  padding: Spacing
   sections: Section[]
 }
+
+// ─── Panel UI ─────────────────────────────────────────
+
+export type PanelLevel = 'area' | 'section' | 'block'
 
 // ─── Page ─────────────────────────────────────────────
 

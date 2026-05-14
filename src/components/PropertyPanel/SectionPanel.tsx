@@ -2,6 +2,15 @@ import { useDoc, useMenuActions } from '../../store/menuStore'
 import { findSectionInDoc } from '../../store/helpers'
 import { formatSectionType } from '../Canvas/styles'
 import type { Section } from '../../store/types'
+import {
+  AlignmentControl,
+  GapControl,
+  marginAutoSides,
+  PANEL_LABEL,
+  PANEL_SECTION_DIVIDER,
+  SpacingBox,
+  WidthControl,
+} from './LayoutControls'
 
 const BTN =
   'px-2.5 py-1 border border-slate-200 rounded bg-white text-xs cursor-pointer text-slate-600 transition-all duration-100 hover:border-blue-500 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:bg-white'
@@ -10,18 +19,29 @@ const BTN_DANGER =
 
 export function SectionPanel({ section }: { section: Section }) {
   const doc = useDoc()
-  const { moveSectionUp, moveSectionDown, deleteSection } = useMenuActions()
+  const {
+    moveSectionUp,
+    moveSectionDown,
+    deleteSection,
+    setSectionWidthPercent,
+    setSectionGap,
+    setSectionAlignment,
+    setSectionMargin,
+    setSectionPadding,
+  } = useMenuActions()
 
   const located = findSectionInDoc(doc, section.id)
   const isFirst = located ? located.sectionIndex === 0 : true
   const isLast = located ? located.sectionIndex >= located.area.sections.length - 1 : true
+
+  const marginDisabled = marginAutoSides(section.alignment)
 
   return (
     <>
       <h3 className="text-sm font-semibold mb-1 text-slate-700">Section</h3>
       <p className="text-xs text-slate-400 mb-4 capitalize">{formatSectionType(section.type)}</p>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <div className="flex gap-1.5">
           <button
             className={BTN}
@@ -48,6 +68,49 @@ export function SectionPanel({ section }: { section: Section }) {
         >
           Delete section
         </button>
+
+        <div className={PANEL_SECTION_DIVIDER}>
+          <WidthControl
+            value={section.widthPercent}
+            onChange={(v) => setSectionWidthPercent(section.id, v)}
+          />
+        </div>
+
+        <AlignmentControl
+          value={section.alignment}
+          onChange={(a) => setSectionAlignment(section.id, a)}
+        />
+
+        <GapControl
+          value={section.gap}
+          onChange={(v) => setSectionGap(section.id, v)}
+          label="Block gap"
+          hint="px between blocks & columns"
+        />
+
+        <div className={`${PANEL_SECTION_DIVIDER} flex flex-col gap-1.5`}>
+          <div className="flex items-center justify-between">
+            <label className={PANEL_LABEL}>Margin (px)</label>
+            {marginDisabled.length > 0 && (
+              <span className="text-[10px] text-slate-400 italic">
+                {section.alignment === 'center' ? 'L/R: auto' : `${marginDisabled[0]}: auto`}
+              </span>
+            )}
+          </div>
+          <SpacingBox
+            values={section.margin}
+            disabledSides={marginDisabled}
+            onChange={(patch) => setSectionMargin(section.id, patch)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className={PANEL_LABEL}>Padding (px)</label>
+          <SpacingBox
+            values={section.padding}
+            onChange={(patch) => setSectionPadding(section.id, patch)}
+          />
+        </div>
       </div>
     </>
   )

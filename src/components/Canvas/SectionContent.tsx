@@ -6,10 +6,12 @@ import { BlockRenderer } from './BlockRenderer'
 import type { Section } from '../../store/types'
 import { PANE_CONTAINER, PANE_CONTAINER_ACTIVE, PANE_EMPTY, cx } from './styles'
 
-export function SectionContent({ section }: { section: Section }) {
+export function SectionContent({ section }: Readonly<{ section: Section }>) {
   const { setPaneRatio, moveBlock, selectSection, setActivePaneId } = useMenuActions()
   const activePaneId = useActivePaneId()
   const selectedSectionId = useSelectedSectionId()
+
+  const paneStyle = { display: 'flex', flexDirection: 'column', gap: `${section.gap}px` } as const
 
   if (section.panes.length === 1) {
     const pane = section.panes[0]
@@ -25,6 +27,7 @@ export function SectionContent({ section }: { section: Section }) {
       >
         <div
           className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
+          style={paneStyle}
           onClick={(e) => {
             e.stopPropagation()
             selectSection(section.id)
@@ -58,7 +61,13 @@ export function SectionContent({ section }: { section: Section }) {
         const isActive = selectedSectionId === section.id && activePaneId === pane.id
         return (
           <>
-            {i > 0 && <Separator key={`sep-${pane.id}`} className="pane-resize-handle" />}
+            {i > 0 && (
+              <Separator
+                key={`sep-${pane.id}`}
+                className="pane-resize-handle"
+                style={{ width: `${section.gap}px` }}
+              />
+            )}
             <Panel key={pane.id} defaultSize={pane.ratio * 100} minSize={15}>
               <DragDropProvider
                 onDragEnd={(event) => {
@@ -70,6 +79,7 @@ export function SectionContent({ section }: { section: Section }) {
               >
                 <div
                   className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
+                  style={paneStyle}
                   onClick={(e) => {
                     e.stopPropagation()
                     selectSection(section.id)

@@ -161,7 +161,7 @@ export function Canvas() {
                 className={cx(SECTION_FRAME, SECTION_FRAME_DRAGGING)}
                 style={{ width: `${contentWidthPx}px` }}
               >
-                <SectionHeader section={activeDragSection} />
+                {/* <SectionHeader section={activeDragSection} /> */}
                 <SectionContent section={activeDragSection} />
               </div>
             )}

@@ -1,7 +1,7 @@
 // Shared Tailwind class strings used across Canvas/Section/Pane components.
 
 export const SECTION_FRAME =
-  'border-2 border-dashed border-slate-300 rounded-lg p-2 relative bg-white transition-[border-color,box-shadow] duration-150 hover:border-slate-400'
+  'border-2 border-dashed border-slate-300 rounded-lg relative bg-white transition-[border-color,box-shadow] duration-150 hover:border-slate-400'
 export const SECTION_FRAME_SELECTED =
   'border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.1)]'
 export const SECTION_FRAME_DRAGGING = 'opacity-50 border-blue-500'

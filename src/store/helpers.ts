@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { textToJSON } from '../components/RichTextInput/utils'
-import type { Area, AreaType, Block, BlockType, GlobalTypography, MenuDoc, PageConfig, PageDimensions, PageSizePreset, Pane, Section, SectionPreset } from './types'
+import type { Area, AreaType, Block, BlockType, GlobalTypography, MenuDoc, PageConfig, PageDimensions, PageSizePreset, Pane, Section, SectionPreset, Spacing } from './types'
 
 export function createId(): string {
   return nanoid()
@@ -9,6 +9,12 @@ export function createId(): string {
 export const MM_TO_PX = 3.7795 // 96 DPI
 export const DEFAULT_PAGE_GAP_PX = 16
 export const DEFAULT_AREA_GAP_PX = 8
+export const DEFAULT_SECTION_GAP_PX = 8
+export const DEFAULT_BLOCK_GAP_PX = 6
+
+export function defaultSpacing(): Spacing {
+  return { top: 0, right: 0, bottom: 0, left: 0 }
+}
 
 export const PAGE_SIZE_DIMS: Record<PageSizePreset, { width: number; height: number }> = {
   A4: { width: 210, height: 297 }, // mm
@@ -56,8 +62,8 @@ export function createArea(name: string, type: AreaType, height: 'auto' | number
     gap: DEFAULT_AREA_GAP_PX,
     widthPercent: 100,
     alignment: 'left',
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    margin: defaultSpacing(),
+    padding: defaultSpacing(),
     sections: [],
   }
 }
@@ -93,6 +99,11 @@ export function createSection(preset: SectionPreset): Section {
     id: createId(),
     locked: false,
     type: preset,
+    widthPercent: 100,
+    gap: DEFAULT_SECTION_GAP_PX,
+    alignment: 'left',
+    margin: defaultSpacing(),
+    padding: defaultSpacing(),
     ...config,
   }
 }
@@ -102,8 +113,11 @@ export function createBlock(type: BlockType): Block {
     id: createId(),
     type,
     locked: false,
-    marginTop: 0,
-    marginBottom: 0,
+    widthPercent: 100,
+    gap: DEFAULT_BLOCK_GAP_PX,
+    alignment: 'left' as const,
+    margin: defaultSpacing(),
+    padding: defaultSpacing(),
   }
 
   switch (type) {
@@ -139,6 +153,18 @@ export function findSectionInDoc(doc: MenuDoc, sectionId: string): { area: Area;
     const sectionIndex = area.sections.findIndex(s => s.id === sectionId)
     if (sectionIndex !== -1) {
       return { area, section: area.sections[sectionIndex], sectionIndex }
+    }
+  }
+  return null
+}
+
+export function findBlockAncestors(doc: MenuDoc, blockId: string): { area: Area; section: Section; pane: Pane; block: Block } | null {
+  for (const area of doc.areas) {
+    for (const section of area.sections) {
+      for (const pane of section.panes) {
+        const block = pane.blocks.find(b => b.id === blockId)
+        if (block) return { area, section, pane, block }
+      }
     }
   }
   return null

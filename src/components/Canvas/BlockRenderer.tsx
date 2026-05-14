@@ -1,9 +1,11 @@
 import { useSortable } from '@dnd-kit/react/sortable'
 import { useRef } from 'react'
-import { useMenuActions, useSelectedBlockId } from '../../store/menuStore'
+import type { CSSProperties } from 'react'
+import { useActivePanelLevel, useMenuActions, useSelectedBlockId } from '../../store/menuStore'
 import type { Block, HeadingBlock, SubheadingBlock, MenuBlock, ImageBlock, LogoNameBlock, MenuItem } from '../../store/types'
 import { LazyRichTextInput as RichTextInput } from '../RichTextInput/RichTextInput'
 import type { JSONContent } from '@tiptap/react'
+import { resolveHorizontalMargin } from '../PropertyPanel/LayoutControls'
 import { cx } from './styles'
 import './BlockRenderer.css'
 
@@ -24,7 +26,22 @@ export function BlockRenderer({ block, index }: { block: Block; index: number })
 
   const { selectBlock } = useMenuActions()
   const selectedBlockId = useSelectedBlockId()
-  const isSelected = selectedBlockId === block.id
+  const activePanelLevel = useActivePanelLevel()
+  const isSelected = activePanelLevel === 'block' && selectedBlockId === block.id
+
+  const { marginLeft, marginRight } = resolveHorizontalMargin(block.alignment, block.margin)
+
+  const style: CSSProperties = {
+    width: `${block.widthPercent}%`,
+    marginTop: `${block.margin.top}px`,
+    marginBottom: `${block.margin.bottom}px`,
+    marginLeft,
+    marginRight,
+    paddingTop: `${block.padding.top}px`,
+    paddingRight: `${block.padding.right}px`,
+    paddingBottom: `${block.padding.bottom}px`,
+    paddingLeft: `${block.padding.left}px`,
+  }
 
   return (
     <div
@@ -35,10 +52,7 @@ export function BlockRenderer({ block, index }: { block: Block; index: number })
         block.locked && BLOCK_ITEM_LOCKED,
         isDragging && BLOCK_ITEM_DRAGGING,
       )}
-      style={{
-        marginTop: block.marginTop > 0 ? `${block.marginTop}px` : undefined,
-        marginBottom: block.marginBottom > 0 ? `${block.marginBottom}px` : undefined,
-      }}
+      style={style}
       onClick={(e) => {
         e.stopPropagation()
         selectBlock(block.id)
@@ -121,7 +135,7 @@ function MenuVisual({ block }: { block: MenuBlock }) {
   }
 
   return (
-    <div className="w-full flex flex-col gap-1.5">
+    <div className="w-full flex flex-col" style={{ gap: `${block.gap}px` }}>
       <RichTextInput
         content={block.title}
         onUpdate={(json) => updateBlock(block.id, { title: json })}
@@ -129,7 +143,7 @@ function MenuVisual({ block }: { block: MenuBlock }) {
         className="menu-title-input"
         singleLine
       />
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col" style={{ gap: `${block.gap}px` }}>
         {block.items.map((item, idx) => (
           <div key={idx} className="flex w-full items-center justify-between gap-1.5 group">
             <div className="flex-1">
@@ -223,12 +237,12 @@ function LogoNameVisual({ block }: { block: LogoNameBlock }) {
   // `logo-name-vertical` class kept so the CSS file can apply `text-align: center`
   // to the ProseMirror children (which we can't reach via Tailwind utilities)
   const wrapperBase = isVertical
-    ? 'w-full flex flex-col items-center text-center gap-3 py-2 logo-name-vertical'
-    : 'w-full flex items-center gap-3 py-2'
+    ? 'w-full flex flex-col items-center text-center py-2 logo-name-vertical'
+    : 'w-full flex items-center py-2'
   const logoSize = isVertical ? 'w-16 h-16' : 'w-12 h-12'
 
   return (
-    <div className={wrapperBase}>
+    <div className={wrapperBase} style={{ gap: `${block.gap}px` }}>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
       <div className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}>
         {block.logoUrl ? (

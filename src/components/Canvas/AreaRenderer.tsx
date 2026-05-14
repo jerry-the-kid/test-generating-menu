@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useMenuActions, useSelectedAreaId } from '../../store/menuStore'
+import { useActivePanelLevel, useMenuActions, useSelectedAreaId } from '../../store/menuStore'
 import type { Area, Section } from '../../store/types'
 import { SortableSection } from './SortableSection'
 import {
@@ -19,7 +19,8 @@ interface AreaRendererProps {
 export function AreaRenderer({ area, sectionIds, sectionById }: AreaRendererProps) {
   const { selectArea } = useMenuActions()
   const selectedAreaId = useSelectedAreaId()
-  const isSelected = selectedAreaId === area.id
+  const activePanelLevel = useActivePanelLevel()
+  const isSelected = activePanelLevel === 'area' && selectedAreaId === area.id
 
   const sections = sectionIds
     .map((id) => sectionById.get(id))

@@ -1,7 +1,7 @@
-import { useRef, useEffect } from 'react'
-import { SectionContent } from './SectionContent'
+import { useEffect, useRef } from 'react'
 import type { Section } from '../../store/types'
-import { SECTION_FRAME, SECTION_HEADER, SECTION_TYPE_LABEL } from './styles'
+import { SectionContent } from './SectionContent'
+import { SECTION_FRAME } from './styles'
 
 interface Props {
   sections: Section[]
@@ -55,11 +55,11 @@ export function MeasurementLayer({ sections, pageContentWidthPx, onHeightsChange
           className={SECTION_FRAME}
           style={{ width: '100%' }}
         >
-          <div className={SECTION_HEADER}>
+          {/* <div className={SECTION_HEADER}>
             <span className={SECTION_TYPE_LABEL}>
               {section.type.replace(/_/g, ' ')}
             </span>
-          </div>
+          </div> */}
           <SectionContent section={section} />
         </div>
       ))}
