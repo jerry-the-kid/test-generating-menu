@@ -68,29 +68,22 @@ export function createArea(name: string, type: AreaType, height: 'auto' | number
   }
 }
 
+export function createPane(ratio: number): Pane {
+  return {
+    id: createId(),
+    ratio,
+    blocks: [],
+    gap: DEFAULT_BLOCK_GAP_PX,
+    contentAlignment: 'start',
+    padding: defaultSpacing(),
+  }
+}
+
 const SECTION_PRESETS: Record<SectionPreset, () => Pick<Section, 'panes'>> = {
-  full_width: () => ({
-    panes: [{ id: createId(), ratio: 1, blocks: [] }],
-  }),
-  two_col_equal: () => ({
-    panes: [
-      { id: createId(), ratio: 0.5, blocks: [] },
-      { id: createId(), ratio: 0.5, blocks: [] },
-    ],
-  }),
-  two_col_split: () => ({
-    panes: [
-      { id: createId(), ratio: 0.33, blocks: [] },
-      { id: createId(), ratio: 0.67, blocks: [] },
-    ],
-  }),
-  three_col: () => ({
-    panes: [
-      { id: createId(), ratio: 0.33, blocks: [] },
-      { id: createId(), ratio: 0.34, blocks: [] },
-      { id: createId(), ratio: 0.33, blocks: [] },
-    ],
-  }),
+  full_width: () => ({ panes: [createPane(1)] }),
+  two_col_equal: () => ({ panes: [createPane(0.5), createPane(0.5)] }),
+  two_col_split: () => ({ panes: [createPane(0.33), createPane(0.67)] }),
+  three_col: () => ({ panes: [createPane(0.33), createPane(0.34), createPane(0.33)] }),
 }
 
 export function createSection(preset: SectionPreset): Section {
@@ -103,9 +96,7 @@ export function createSection(preset: SectionPreset): Section {
     height: 'min-content',
     gap: DEFAULT_SECTION_GAP_PX,
     alignment: 'left',
-    contentAlignment: 'start',
     margin: defaultSpacing(),
-    padding: defaultSpacing(),
     ...config,
   }
 }

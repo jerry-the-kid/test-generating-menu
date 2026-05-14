@@ -4,7 +4,6 @@ import { formatSectionType } from '../Canvas/styles'
 import type { Section } from '../../store/types'
 import {
   AlignmentControl,
-  ContentAlignmentControl,
   GapControl,
   HeightControl,
   marginAutoSides,
@@ -29,9 +28,7 @@ export function SectionPanel({ section }: { section: Section }) {
     setSectionHeight,
     setSectionGap,
     setSectionAlignment,
-    setSectionContentAlignment,
     setSectionMargin,
-    setSectionPadding,
   } = useMenuActions()
 
   const located = findSectionInDoc(doc, section.id)
@@ -105,17 +102,11 @@ export function SectionPanel({ section }: { section: Section }) {
           onChange={(a) => setSectionAlignment(section.id, a)}
         />
 
-        <ContentAlignmentControl
-          value={section.contentAlignment}
-          onChange={(v) => setSectionContentAlignment(section.id, v)}
-          hint={section.height === 'min-content' ? 'applies when section has fixed height' : undefined}
-        />
-
         <GapControl
           value={section.gap}
           onChange={(v) => setSectionGap(section.id, v)}
-          label="Block gap"
-          hint="px between blocks & columns"
+          label="Pane gap"
+          hint="px between panes (columns)"
         />
 
         <div className={`${PANEL_SECTION_DIVIDER} flex flex-col gap-1.5`}>
@@ -131,14 +122,6 @@ export function SectionPanel({ section }: { section: Section }) {
             values={section.margin}
             disabledSides={marginDisabled}
             onChange={(patch) => setSectionMargin(section.id, patch)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className={PANEL_LABEL}>Padding (px)</label>
-          <SpacingBox
-            values={section.padding}
-            onChange={(patch) => setSectionPadding(section.id, patch)}
           />
         </div>
       </div>

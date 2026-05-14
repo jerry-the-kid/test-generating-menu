@@ -1,24 +1,32 @@
 import { DragDropProvider } from '@dnd-kit/react'
+import type { CSSProperties } from 'react'
 import { Panel, Group, Separator } from 'react-resizable-panels'
 import type { Layout } from 'react-resizable-panels'
 import { useActivePaneId, useMenuActions, useSelectedSectionId } from '../../store/menuStore'
 import { BlockRenderer } from './BlockRenderer'
-import type { Section } from '../../store/types'
+import type { Pane, Section } from '../../store/types'
 import { PANE_CONTAINER, PANE_CONTAINER_ACTIVE, PANE_EMPTY, cx } from './styles'
 
-export function SectionContent({ section }: Readonly<{ section: Section }>) {
-  const { setPaneRatio, moveBlock, selectSection, setActivePaneId } = useMenuActions()
-  const activePaneId = useActivePaneId()
-  const selectedSectionId = useSelectedSectionId()
+const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' } as const
 
-  const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' } as const
-  const paneStyle = {
+function buildPaneStyle(pane: Pane): CSSProperties {
+  return {
     display: 'flex',
     flexDirection: 'column',
-    gap: `${section.gap}px`,
-    justifyContent: justifyMap[section.contentAlignment],
+    gap: `${pane.gap}px`,
+    justifyContent: justifyMap[pane.contentAlignment],
+    paddingTop: `${pane.padding.top}px`,
+    paddingRight: `${pane.padding.right}px`,
+    paddingBottom: `${pane.padding.bottom}px`,
+    paddingLeft: `${pane.padding.left}px`,
     height: '100%',
-  } as const
+  }
+}
+
+export function SectionContent({ section }: Readonly<{ section: Section }>) {
+  const { setPaneRatio, moveBlock, selectPane } = useMenuActions()
+  const activePaneId = useActivePaneId()
+  const selectedSectionId = useSelectedSectionId()
 
   if (section.panes.length === 1) {
     const pane = section.panes[0]
@@ -34,11 +42,10 @@ export function SectionContent({ section }: Readonly<{ section: Section }>) {
       >
         <div
           className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
-          style={paneStyle}
+          style={buildPaneStyle(pane)}
           onClick={(e) => {
             e.stopPropagation()
-            selectSection(section.id)
-            setActivePaneId(pane.id)
+            selectPane(section.id, pane.id)
           }}
         >
           {pane.blocks.length === 0 ? (
@@ -90,11 +97,10 @@ export function SectionContent({ section }: Readonly<{ section: Section }>) {
               >
                 <div
                   className={cx(PANE_CONTAINER, isActive && PANE_CONTAINER_ACTIVE)}
-                  style={paneStyle}
+                  style={buildPaneStyle(pane)}
                   onClick={(e) => {
                     e.stopPropagation()
-                    selectSection(section.id)
-                    setActivePaneId(pane.id)
+                    selectPane(section.id, pane.id)
                   }}
                 >
                   {pane.blocks.length === 0 ? (

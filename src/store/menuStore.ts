@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
-import type { Alignment, Area, AreaType, Block, BlockType, ContentAlignment, MenuDoc, Page, PageConfig, PageSizePreset, PanelLevel, Section, SectionPreset, Spacing } from './types'
+import type { Alignment, Area, AreaType, Block, BlockType, ContentAlignment, MenuDoc, Page, PageConfig, PageSizePreset, Pane, PanelLevel, Section, SectionPreset, Spacing } from './types'
 import { createArea, createBlock, createEmptyDoc, createId, createSection, findBlockAncestors, findBlockInDoc, findSectionInDoc, MM_TO_PX, resolvePageDimensions } from './helpers'
 
 interface MenuStoreState {
@@ -46,9 +46,13 @@ interface MenuStoreActions {
   setSectionHeight: (sectionId: string, value: 'min-content' | number) => void
   setSectionGap: (sectionId: string, gap: number) => void
   setSectionAlignment: (sectionId: string, alignment: Alignment) => void
-  setSectionContentAlignment: (sectionId: string, value: ContentAlignment) => void
   setSectionMargin: (sectionId: string, patch: Partial<Spacing>) => void
-  setSectionPadding: (sectionId: string, patch: Partial<Spacing>) => void
+
+  // Pane
+  setPaneGap: (sectionId: string, paneId: string, gap: number) => void
+  setPaneContentAlignment: (sectionId: string, paneId: string, value: ContentAlignment) => void
+  setPanePadding: (sectionId: string, paneId: string, patch: Partial<Spacing>) => void
+  selectPane: (sectionId: string, paneId: string) => void
 
   // Block
   addBlock: (sectionId: string, paneId: string, type: BlockType) => void
@@ -111,6 +115,7 @@ export const useMenuStore = create<MenuStoreState>()(
             state.selectedAreaId = null
             state.selectedSectionId = null
             state.selectedBlockId = null
+            state.activePaneId = null
             state.activePanelLevel = null
           }
         }),
@@ -207,6 +212,15 @@ export const useMenuStore = create<MenuStoreState>()(
           result.area.sections.splice(result.sectionIndex, 1)
           if (state.selectedSectionId === sectionId) {
             state.selectedSectionId = null
+            state.selectedBlockId = null
+            state.activePaneId = null
+            if (
+              state.activePanelLevel === 'section' ||
+              state.activePanelLevel === 'pane' ||
+              state.activePanelLevel === 'block'
+            ) {
+              state.activePanelLevel = state.selectedAreaId ? 'area' : null
+            }
           }
         }),
 
@@ -243,19 +257,37 @@ export const useMenuStore = create<MenuStoreState>()(
           if (result) result.section.alignment = alignment
         }),
 
-        setSectionContentAlignment: (sectionId, value) => set((state) => {
-          const result = findSectionInDoc(state.doc, sectionId)
-          if (result) result.section.contentAlignment = value
-        }),
-
         setSectionMargin: (sectionId, patch) => set((state) => {
           const result = findSectionInDoc(state.doc, sectionId)
           if (result) Object.assign(result.section.margin, patch)
         }),
 
-        setSectionPadding: (sectionId, patch) => set((state) => {
+        setPaneGap: (sectionId, paneId, gap) => set((state) => {
           const result = findSectionInDoc(state.doc, sectionId)
-          if (result) Object.assign(result.section.padding, patch)
+          const pane = result?.section.panes.find((p) => p.id === paneId)
+          if (pane) pane.gap = Math.max(0, gap)
+        }),
+
+        setPaneContentAlignment: (sectionId, paneId, value) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          const pane = result?.section.panes.find((p) => p.id === paneId)
+          if (pane) pane.contentAlignment = value
+        }),
+
+        setPanePadding: (sectionId, paneId, patch) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          const pane = result?.section.panes.find((p) => p.id === paneId)
+          if (pane) Object.assign(pane.padding, patch)
+        }),
+
+        selectPane: (sectionId, paneId) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (!result) return
+          state.selectedAreaId = result.area.id
+          state.selectedSectionId = sectionId
+          state.selectedBlockId = null
+          state.activePaneId = paneId
+          state.activePanelLevel = 'pane'
         }),
 
         addBlock: (sectionId, paneId, type) => set((state) => {
@@ -282,7 +314,9 @@ export const useMenuStore = create<MenuStoreState>()(
           if (state.selectedBlockId === blockId) {
             state.selectedBlockId = null
             if (state.activePanelLevel === 'block') {
-              state.activePanelLevel = state.selectedSectionId ? 'section' : state.selectedAreaId ? 'area' : null
+              state.activePanelLevel = state.activePaneId
+                ? 'pane'
+                : state.selectedSectionId ? 'section' : state.selectedAreaId ? 'area' : null
             }
           }
         }),
@@ -328,7 +362,9 @@ export const useMenuStore = create<MenuStoreState>()(
           if (!blockId) {
             state.selectedBlockId = null
             if (state.activePanelLevel === 'block') {
-              state.activePanelLevel = state.selectedSectionId ? 'section' : state.selectedAreaId ? 'area' : null
+              state.activePanelLevel = state.activePaneId
+                ? 'pane'
+                : state.selectedSectionId ? 'section' : state.selectedAreaId ? 'area' : null
             }
             return
           }
@@ -345,7 +381,8 @@ export const useMenuStore = create<MenuStoreState>()(
           if (!sectionId) {
             state.selectedSectionId = null
             state.selectedBlockId = null
-            if (state.activePanelLevel === 'section' || state.activePanelLevel === 'block') {
+            state.activePaneId = null
+            if (state.activePanelLevel === 'section' || state.activePanelLevel === 'pane' || state.activePanelLevel === 'block') {
               state.activePanelLevel = state.selectedAreaId ? 'area' : null
             }
             return
@@ -355,6 +392,7 @@ export const useMenuStore = create<MenuStoreState>()(
           state.selectedSectionId = sectionId
           state.selectedAreaId = result.area.id
           state.selectedBlockId = null
+          state.activePaneId = null
           state.activePanelLevel = 'section'
         }),
 
@@ -524,6 +562,13 @@ export const useSelectedSection = (): Section | null =>
   useMenuStore((s) => {
     if (!s.selectedSectionId) return null
     return findSectionInDoc(s.doc, s.selectedSectionId)?.section ?? null
+  })
+
+export const useSelectedPane = (): Pane | null =>
+  useMenuStore((s) => {
+    if (!s.selectedSectionId || !s.activePaneId) return null
+    const section = findSectionInDoc(s.doc, s.selectedSectionId)?.section
+    return section?.panes.find((p) => p.id === s.activePaneId) ?? null
   })
 
 export const useMenuActions = () => useMenuStore((s) => s.actions)

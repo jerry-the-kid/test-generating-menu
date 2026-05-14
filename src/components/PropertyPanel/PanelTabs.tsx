@@ -1,4 +1,5 @@
 import {
+  useActivePaneId,
   useActivePanelLevel,
   useMenuActions,
   useSelectedAreaId,
@@ -10,12 +11,14 @@ import type { PanelLevel } from '../../store/types'
 const TABS: { level: PanelLevel; label: string }[] = [
   { level: 'area', label: 'Area' },
   { level: 'section', label: 'Section' },
+  { level: 'pane', label: 'Pane' },
   { level: 'block', label: 'Block' },
 ]
 
 export function PanelTabs() {
   const areaId = useSelectedAreaId()
   const sectionId = useSelectedSectionId()
+  const paneId = useActivePaneId()
   const blockId = useSelectedBlockId()
   const active = useActivePanelLevel()
   const { setActivePanelLevel } = useMenuActions()
@@ -23,6 +26,7 @@ export function PanelTabs() {
   const available: Record<PanelLevel, boolean> = {
     area: !!areaId,
     section: !!sectionId,
+    pane: !!paneId,
     block: !!blockId,
   }
 

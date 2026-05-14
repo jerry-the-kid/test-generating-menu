@@ -43,10 +43,6 @@ export function SortableSection({ section, index }: SortableSectionProps) {
     marginBottom: `${section.margin.bottom}px`,
     marginLeft,
     marginRight,
-    paddingTop: `${section.padding.top}px`,
-    paddingRight: `${section.padding.right}px`,
-    paddingBottom: `${section.padding.bottom}px`,
-    paddingLeft: `${section.padding.left}px`,
   }
 
   // handleRef preserved for future drag-handle use

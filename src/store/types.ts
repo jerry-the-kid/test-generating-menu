@@ -98,6 +98,14 @@ export type Block =
 export interface Pane {
   id: string
   ratio: number
+  /** Vertical gap in px between blocks inside this pane */
+  gap: number
+  /** Vertical positioning of blocks inside this pane (maps to flex justifyContent).
+   *  Only has visible effect when the section has a fixed height (in 'list' areas)
+   *  and content is shorter than the pane. */
+  contentAlignment: ContentAlignment
+  /** Inner padding in px */
+  padding: Spacing
   blocks: Block[]
 }
 
@@ -111,18 +119,12 @@ export interface Section {
   /** 'min-content' fits content; number is a percentage 10–100 of the parent List area's height.
    *  Only renders meaningfully when the containing Area is type 'list' with a fixed height. */
   height: 'min-content' | number
-  /** px; vertical block-gap inside each pane AND horizontal inter-pane gap */
+  /** px; horizontal inter-pane gap (separator width). Inner block-gap lives on Pane. */
   gap: number
   /** Horizontal alignment within the area */
   alignment: Alignment
-  /** Vertical positioning of blocks inside each pane (maps to flex justifyContent).
-   *  Only has visible effect when the section has a fixed height (in 'list' areas)
-   *  and content is shorter than the section. */
-  contentAlignment: ContentAlignment
   /** Outer margin in px; left/right overridden by 'auto' based on alignment */
   margin: Spacing
-  /** Inner padding in px */
-  padding: Spacing
 }
 
 // ─── Area ─────────────────────────────────────────────
@@ -153,7 +155,7 @@ export interface Area {
 
 // ─── Panel UI ─────────────────────────────────────────
 
-export type PanelLevel = 'area' | 'section' | 'block'
+export type PanelLevel = 'area' | 'section' | 'pane' | 'block'
 
 // ─── Page ─────────────────────────────────────────────
 
