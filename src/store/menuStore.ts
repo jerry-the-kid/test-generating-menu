@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
-import type { Alignment, Area, AreaType, Block, BlockType, MenuDoc, Page, PageConfig, PageSizePreset, PanelLevel, Section, SectionPreset, Spacing } from './types'
+import type { Alignment, Area, AreaType, Block, BlockType, ContentAlignment, MenuDoc, Page, PageConfig, PageSizePreset, PanelLevel, Section, SectionPreset, Spacing } from './types'
 import { createArea, createBlock, createEmptyDoc, createId, createSection, findBlockAncestors, findBlockInDoc, findSectionInDoc, MM_TO_PX, resolvePageDimensions } from './helpers'
 
 interface MenuStoreState {
@@ -46,6 +46,7 @@ interface MenuStoreActions {
   setSectionHeight: (sectionId: string, value: 'min-content' | number) => void
   setSectionGap: (sectionId: string, gap: number) => void
   setSectionAlignment: (sectionId: string, alignment: Alignment) => void
+  setSectionContentAlignment: (sectionId: string, value: ContentAlignment) => void
   setSectionMargin: (sectionId: string, patch: Partial<Spacing>) => void
   setSectionPadding: (sectionId: string, patch: Partial<Spacing>) => void
 
@@ -240,6 +241,11 @@ export const useMenuStore = create<MenuStoreState>()(
         setSectionAlignment: (sectionId, alignment) => set((state) => {
           const result = findSectionInDoc(state.doc, sectionId)
           if (result) result.section.alignment = alignment
+        }),
+
+        setSectionContentAlignment: (sectionId, value) => set((state) => {
+          const result = findSectionInDoc(state.doc, sectionId)
+          if (result) result.section.contentAlignment = value
         }),
 
         setSectionMargin: (sectionId, patch) => set((state) => {

@@ -9,6 +9,7 @@ export function PageGapGroup() {
       <label className={LABEL}>Gap (px):</label>
       <input
         type="number"
+        inputMode="numeric"
         min={0}
         max={64}
         value={gap}

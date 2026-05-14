@@ -1,4 +1,4 @@
-import type { Alignment, Spacing } from '../../store/types'
+import type { Alignment, ContentAlignment, Spacing } from '../../store/types'
 
 export const PANEL_LABEL = 'text-[11px] font-semibold capitalize text-slate-500'
 export const PANEL_INPUT =
@@ -11,6 +11,12 @@ const ALIGNMENTS: { value: Alignment; label: string; icon: string; title: string
   { value: 'left', label: 'Left', icon: '⇤', title: 'Align left (mr-auto)' },
   { value: 'center', label: 'Center', icon: '↔', title: 'Center (mx-auto)' },
   { value: 'right', label: 'Right', icon: '⇥', title: 'Align right (ml-auto)' },
+]
+
+const CONTENT_ALIGNMENTS: { value: ContentAlignment; label: string; icon: string; title: string }[] = [
+  { value: 'start', label: 'Top', icon: '⤒', title: 'Align content to top (justify-start)' },
+  { value: 'center', label: 'Center', icon: '⇳', title: 'Center content vertically (justify-center)' },
+  { value: 'end', label: 'Bottom', icon: '⤓', title: 'Align content to bottom (justify-end)' },
 ]
 
 function clamp(v: number, lo: number, hi: number) {
@@ -36,6 +42,7 @@ export function WidthControl({ value, onChange }: { value: number; onChange: (v:
         />
         <input
           type="number"
+          inputMode="numeric"
           min={10}
           max={100}
           value={value}
@@ -88,6 +95,7 @@ export function HeightControl({
           />
           <input
             type="number"
+            inputMode="numeric"
             min={5}
             max={100}
             value={numericValue}
@@ -135,6 +143,44 @@ export function AlignmentControl({
   )
 }
 
+export function ContentAlignmentControl({
+  value,
+  onChange,
+  hint,
+}: Readonly<{
+  value: ContentAlignment
+  onChange: (a: ContentAlignment) => void
+  hint?: string
+}>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={PANEL_LABEL}>Content alignment</label>
+      <div className="grid grid-cols-3 gap-1">
+        {CONTENT_ALIGNMENTS.map(({ value: v, label, icon, title }) => {
+          const active = value === v
+          return (
+            <button
+              key={v}
+              onClick={() => onChange(v)}
+              title={title}
+              className={
+                'flex flex-col items-center justify-center gap-0.5 py-1.5 border rounded text-xs cursor-pointer transition-all duration-100 ' +
+                (active
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:bg-blue-50')
+              }
+            >
+              <span className="text-base leading-none">{icon}</span>
+              <span className="text-[10px]">{label}</span>
+            </button>
+          )
+        })}
+      </div>
+      {hint && <span className="text-[10px] text-slate-400 italic">{hint}</span>}
+    </div>
+  )
+}
+
 export function GapControl({
   value,
   onChange,
@@ -154,6 +200,7 @@ export function GapControl({
       <div className="flex items-center gap-1.5">
         <input
           type="number"
+          inputMode="numeric"
           min={0}
           max={max}
           value={value}
@@ -183,49 +230,107 @@ export function SpacingBox({ values, disabledSides = [], onChange }: SpacingBoxP
     onChange({ [side]: clamp(Number(e.target.value), 0, 999) } as Partial<Spacing>)
   }
 
+  const xDisabled = isDisabled('left') && isDisabled('right')
+  const xShared = !isDisabled('left') && !isDisabled('right') && values.left === values.right
+  const xValue = xShared ? values.left : ''
+
+  const yShared = values.top === values.bottom
+  const yValue = yShared ? values.top : ''
+
+  const handleX = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = clamp(Number(e.target.value), 0, 999)
+    const patch: Partial<Spacing> = {}
+    if (!isDisabled('left')) patch.left = v
+    if (!isDisabled('right')) patch.right = v
+    onChange(patch)
+  }
+
+  const handleY = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = clamp(Number(e.target.value), 0, 999)
+    onChange({ top: v, bottom: v })
+  }
+
+  const shortcutClass = (disabled: boolean) =>
+    `${disabled ? PANEL_INPUT_DISABLED : PANEL_INPUT} w-14 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`
+
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] grid-rows-3 gap-1 items-center justify-items-center w-full">
-      <span />
-      <input
-        type="number"
-        min={0}
-        value={values.top}
-        onChange={handle('top')}
-        disabled={isDisabled('top')}
-        className={fieldClass('top')}
-        title="Top"
-      />
-      <span />
-      <input
-        type="number"
-        min={0}
-        value={values.left}
-        onChange={handle('left')}
-        disabled={isDisabled('left')}
-        className={fieldClass('left')}
-        title={isDisabled('left') ? 'Disabled — alignment uses auto on this side' : 'Left'}
-      />
-      <span className="text-[10px] text-slate-300 px-1">↔</span>
-      <input
-        type="number"
-        min={0}
-        value={values.right}
-        onChange={handle('right')}
-        disabled={isDisabled('right')}
-        className={fieldClass('right')}
-        title={isDisabled('right') ? 'Disabled — alignment uses auto on this side' : 'Right'}
-      />
-      <span />
-      <input
-        type="number"
-        min={0}
-        value={values.bottom}
-        onChange={handle('bottom')}
-        disabled={isDisabled('bottom')}
-        className={fieldClass('bottom')}
-        title="Bottom"
-      />
-      <span />
+    <div className="flex flex-col gap-2 w-full">
+      <div className="flex items-center justify-center gap-3">
+        <label className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+          X
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={xValue}
+            placeholder="—"
+            onChange={handleX}
+            disabled={xDisabled}
+            className={shortcutClass(xDisabled)}
+            title={xDisabled ? 'Disabled — alignment uses auto on both sides' : 'Sets left and right together'}
+          />
+        </label>
+        <label className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+          Y
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={yValue}
+            placeholder="—"
+            onChange={handleY}
+            className={shortcutClass(false)}
+            title="Sets top and bottom together"
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] grid-rows-3 gap-1 items-center justify-items-center w-full">
+        <span />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={values.top}
+          onChange={handle('top')}
+          disabled={isDisabled('top')}
+          className={fieldClass('top')}
+          title="Top"
+        />
+        <span />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={values.left}
+          onChange={handle('left')}
+          disabled={isDisabled('left')}
+          className={fieldClass('left')}
+          title={isDisabled('left') ? 'Disabled — alignment uses auto on this side' : 'Left'}
+        />
+        <span className="text-[10px] text-slate-300 px-1">↔</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={values.right}
+          onChange={handle('right')}
+          disabled={isDisabled('right')}
+          className={fieldClass('right')}
+          title={isDisabled('right') ? 'Disabled — alignment uses auto on this side' : 'Right'}
+        />
+        <span />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={values.bottom}
+          onChange={handle('bottom')}
+          disabled={isDisabled('bottom')}
+          className={fieldClass('bottom')}
+          title="Bottom"
+        />
+        <span />
+      </div>
     </div>
   )
 }

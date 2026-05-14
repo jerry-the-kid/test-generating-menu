@@ -4,6 +4,7 @@ import { formatSectionType } from '../Canvas/styles'
 import type { Section } from '../../store/types'
 import {
   AlignmentControl,
+  ContentAlignmentControl,
   GapControl,
   HeightControl,
   marginAutoSides,
@@ -28,6 +29,7 @@ export function SectionPanel({ section }: { section: Section }) {
     setSectionHeight,
     setSectionGap,
     setSectionAlignment,
+    setSectionContentAlignment,
     setSectionMargin,
     setSectionPadding,
   } = useMenuActions()
@@ -101,6 +103,12 @@ export function SectionPanel({ section }: { section: Section }) {
         <AlignmentControl
           value={section.alignment}
           onChange={(a) => setSectionAlignment(section.id, a)}
+        />
+
+        <ContentAlignmentControl
+          value={section.contentAlignment}
+          onChange={(v) => setSectionContentAlignment(section.id, v)}
+          hint={section.height === 'min-content' ? 'applies when section has fixed height' : undefined}
         />
 
         <GapControl

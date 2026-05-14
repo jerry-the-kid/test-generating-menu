@@ -28,6 +28,8 @@ export interface Spacing {
 
 export type Alignment = 'left' | 'center' | 'right'
 
+export type ContentAlignment = 'start' | 'center' | 'end'
+
 // ─── Block Definitions ───────────────────────────────
 
 export interface BaseBlock {
@@ -113,6 +115,10 @@ export interface Section {
   gap: number
   /** Horizontal alignment within the area */
   alignment: Alignment
+  /** Vertical positioning of blocks inside each pane (maps to flex justifyContent).
+   *  Only has visible effect when the section has a fixed height (in 'list' areas)
+   *  and content is shorter than the section. */
+  contentAlignment: ContentAlignment
   /** Outer margin in px; left/right overridden by 'auto' based on alignment */
   margin: Spacing
   /** Inner padding in px */

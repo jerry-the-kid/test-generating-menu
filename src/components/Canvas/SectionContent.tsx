@@ -11,7 +11,14 @@ export function SectionContent({ section }: Readonly<{ section: Section }>) {
   const activePaneId = useActivePaneId()
   const selectedSectionId = useSelectedSectionId()
 
-  const paneStyle = { display: 'flex', flexDirection: 'column', gap: `${section.gap}px` } as const
+  const justifyMap = { start: 'flex-start', center: 'center', end: 'flex-end' } as const
+  const paneStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: `${section.gap}px`,
+    justifyContent: justifyMap[section.contentAlignment],
+    height: '100%',
+  } as const
 
   if (section.panes.length === 1) {
     const pane = section.panes[0]

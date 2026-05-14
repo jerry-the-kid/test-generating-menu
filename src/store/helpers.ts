@@ -103,6 +103,7 @@ export function createSection(preset: SectionPreset): Section {
     height: 'min-content',
     gap: DEFAULT_SECTION_GAP_PX,
     alignment: 'left',
+    contentAlignment: 'start',
     margin: defaultSpacing(),
     padding: defaultSpacing(),
     ...config,
@@ -127,7 +128,16 @@ export function createBlock(type: BlockType): Block {
     case 'subheading':
       return { ...base, type: 'subheading', content: textToJSON('Subtitle', { fontSize: '16px' }) }
     case 'menu':
-      return { ...base, type: 'menu', title: textToJSON('', { fontSize: '22px' }), items: [] }
+      return {
+        ...base,
+        type: 'menu',
+        title: textToJSON('Category', { fontSize: '22px' }),
+        items: [
+          { name: textToJSON('Item 1'), price: textToJSON('$0.00'), unit: textToJSON('') },
+          { name: textToJSON('Item 2'), price: textToJSON('$0.00'), unit: textToJSON('') },
+          { name: textToJSON('Item 3'), price: textToJSON('$0.00'), unit: textToJSON('') },
+        ],
+      }
     case 'image':
       return { ...base, type: 'image', url: '', alt: '', fit: 'cover', aspectRatio: '16/9' }
     case 'logo_name':
