@@ -1,10 +1,16 @@
 import { useSortable } from '@dnd-kit/react/sortable'
-import { useRef } from 'react'
+import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import { useActivePanelLevel, useMenuActions, useSelectedBlockId } from '../../store/menuStore'
-import type { Block, HeadingBlock, SubheadingBlock, MenuBlock, ImageBlock, LogoNameBlock, MenuItem } from '../../store/types'
-import { LazyRichTextInput as RichTextInput } from '../RichTextInput/RichTextInput'
-import type { JSONContent } from '@tiptap/react'
+import {
+  useActivePanelLevel,
+  useMenuActions,
+  useMenuStyle,
+  useSelectedBlockId,
+  useTypography,
+} from '../../store/menuStore'
+import { menuStyleToCss } from '../../store/menuStyle'
+import type { Block, HeadingBlock, SubheadingBlock, MenuBlock, ImageBlock, LogoNameBlock } from '../../store/types'
+import { RichTextDisplay } from '../RichTextInput/RichTextInput'
 import { resolveHorizontalMargin } from '../PropertyPanel/LayoutControls'
 import { cx } from './styles'
 import './BlockRenderer.css'
@@ -15,7 +21,7 @@ const BLOCK_ITEM_SELECTED = 'border-blue-500 bg-blue-50 hover:border-blue-500 ho
 const BLOCK_ITEM_LOCKED = 'opacity-70 cursor-default'
 const BLOCK_ITEM_DRAGGING = 'opacity-40 border-blue-500'
 
-export function BlockRenderer({ block, index }: { block: Block; index: number }) {
+export function BlockRenderer({ block, index }: Readonly<{ block: Block; index: number }>) {
   const { ref, isDragging } = useSortable({
     id: block.id,
     index,
@@ -67,7 +73,7 @@ export function BlockRenderer({ block, index }: { block: Block; index: number })
   )
 }
 
-function BlockVisual({ block }: { block: Block }) {
+function BlockVisual({ block }: Readonly<{ block: Block }>) {
   switch (block.type) {
     case 'heading':
       return <HeadingVisual block={block} />
@@ -82,126 +88,49 @@ function BlockVisual({ block }: { block: Block }) {
   }
 }
 
-function HeadingVisual({ block }: { block: HeadingBlock }) {
-  const { updateBlock } = useMenuActions()
+function HeadingVisual({ block }: Readonly<{ block: HeadingBlock }>) {
   return (
     <div className="w-full">
-      <RichTextInput
-        content={block.content}
-        onUpdate={(json) => updateBlock(block.id, { content: json })}
-        placeholder="Enter heading..."
-        className="heading-input"
-        singleLine
-      />
+      <RichTextDisplay content={block.content} placeholder="Enter heading..." className="heading-input" />
     </div>
   )
 }
 
-function SubheadingVisual({ block }: { block: SubheadingBlock }) {
-  const { updateBlock } = useMenuActions()
+function SubheadingVisual({ block }: Readonly<{ block: SubheadingBlock }>) {
   return (
     <div className="w-full">
-      <RichTextInput
-        content={block.content}
-        onUpdate={(json) => updateBlock(block.id, { content: json })}
-        placeholder="Enter subheading..."
-        className="subheading-input"
-        singleLine
-      />
+      <RichTextDisplay content={block.content} placeholder="Enter subheading..." className="subheading-input" />
     </div>
   )
 }
 
-function MenuVisual({ block }: { block: MenuBlock }) {
-  const { updateBlock } = useMenuActions()
-
-  const addItem = () => {
-    const emptyItem: MenuItem = {
-      name: { type: 'doc', content: [{ type: 'paragraph', content: [] }] },
-      price: { type: 'doc', content: [{ type: 'paragraph', content: [] }] },
-      unit: { type: 'doc', content: [{ type: 'paragraph', content: [] }] },
-    }
-    updateBlock(block.id, { items: [...block.items, emptyItem] })
-  }
-
-  const updateItem = (idx: number, field: keyof MenuItem, value: JSONContent) => {
-    const updated = [...block.items]
-    updated[idx] = { ...updated[idx], [field]: value }
-    updateBlock(block.id, { items: updated })
-  }
-
-  const removeItem = (idx: number) => {
-    updateBlock(block.id, { items: block.items.filter((_, i) => i !== idx) })
-  }
+function MenuVisual({ block }: Readonly<{ block: MenuBlock }>) {
+  const menuStyle = useMenuStyle()
+  const { scaleFactor } = useTypography()
+  const titleStyle = useMemo(() => menuStyleToCss(menuStyle.title, scaleFactor), [menuStyle.title, scaleFactor])
+  const itemStyle = useMemo(() => menuStyleToCss(menuStyle.item, scaleFactor), [menuStyle.item, scaleFactor])
 
   return (
     <div className="w-full flex flex-col" style={{ gap: `${block.gap}px` }}>
-      <RichTextInput
-        content={block.title}
-        onUpdate={(json) => updateBlock(block.id, { title: json })}
-        placeholder="Category name"
-        className="menu-title-input"
-        singleLine
-      />
+      <div style={titleStyle}>{block.title || 'Category'}</div>
       <div className="flex flex-col" style={{ gap: `${block.gap}px` }}>
         {block.items.map((item, idx) => (
-          <div key={idx} className="flex w-full items-center justify-between gap-1.5 group">
-            <div className="flex-1">
-              <RichTextInput
-                content={item.name}
-                onUpdate={(json) => updateItem(idx, 'name', json)}
-                placeholder="Item name"
-                className="menu-item-name-input"
-                singleLine
-              />
-            </div>
-            <div className="w-[70px]">
-              <RichTextInput
-                content={item.price}
-                onUpdate={(json) => updateItem(idx, 'price', json)}
-                placeholder="Price"
-                className="menu-item-price-input"
-                singleLine
-              />
-            </div>
-            <button
-              className="bg-transparent border-0 text-red-600 cursor-pointer text-sm px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-red-50"
-              onClick={(e) => { e.stopPropagation(); removeItem(idx) }}
-            >
-              x
-            </button>
+          <div key={idx} className="flex w-full items-center justify-between gap-1.5" style={itemStyle}>
+            <span className="flex-1 min-w-0">{item.name}</span>
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <span>{item.price}</span>
+              {item.unit && <span className="text-[0.85em] opacity-70">{item.unit}</span>}
+            </span>
           </div>
         ))}
       </div>
-      <button
-        className="self-start bg-transparent border border-dashed border-slate-300 text-slate-500 text-xs px-3 py-1 rounded cursor-pointer mt-1 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50"
-        onClick={(e) => { e.stopPropagation(); addItem() }}
-      >
-        + Add Item
-      </button>
     </div>
   )
 }
 
-function ImageVisual({ block }: { block: ImageBlock }) {
-  const { updateBlock } = useMenuActions()
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    updateBlock(block.id, { url, alt: file.name })
-  }
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    fileRef.current?.click()
-  }
-
+function ImageVisual({ block }: Readonly<{ block: ImageBlock }>) {
   return (
-    <div className="w-full cursor-pointer rounded-md overflow-hidden" onClick={handleClick}>
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+    <div className="w-full rounded-md overflow-hidden">
       {block.url ? (
         <img
           src={block.url}
@@ -215,27 +144,15 @@ function ImageVisual({ block }: { block: ImageBlock }) {
           style={{ aspectRatio: block.aspectRatio }}
         >
           <span className="text-[28px] opacity-50">image</span>
-          <span className="text-xs text-slate-400">Click to add image</span>
+          <span className="text-xs text-slate-400">Use the panel to upload</span>
         </div>
       )}
     </div>
   )
 }
 
-function LogoNameVisual({ block }: { block: LogoNameBlock }) {
-  const { updateBlock } = useMenuActions()
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    updateBlock(block.id, { logoUrl: url })
-  }
-
+function LogoNameVisual({ block }: Readonly<{ block: LogoNameBlock }>) {
   const isVertical = block.layout === 'vertical'
-  // `logo-name-vertical` class kept so the CSS file can apply `text-align: center`
-  // to the ProseMirror children (which we can't reach via Tailwind utilities)
   const wrapperBase = isVertical
     ? 'w-full flex flex-col items-center text-center py-2 logo-name-vertical'
     : 'w-full flex items-center py-2'
@@ -243,8 +160,7 @@ function LogoNameVisual({ block }: { block: LogoNameBlock }) {
 
   return (
     <div className={wrapperBase} style={{ gap: `${block.gap}px` }}>
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-      <div className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}>
+      <div className="flex-shrink-0">
         {block.logoUrl ? (
           <img src={block.logoUrl} alt="Logo" className={`${logoSize} object-contain rounded-md`} />
         ) : (
@@ -254,20 +170,8 @@ function LogoNameVisual({ block }: { block: LogoNameBlock }) {
         )}
       </div>
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <RichTextInput
-          content={block.brandName}
-          onUpdate={(json) => updateBlock(block.id, { brandName: json })}
-          placeholder="Brand Name"
-          className="logo-brand-input"
-          singleLine
-        />
-        <RichTextInput
-          content={block.tagline}
-          onUpdate={(json) => updateBlock(block.id, { tagline: json })}
-          placeholder="Tagline (optional)"
-          className="logo-tagline-input"
-          singleLine
-        />
+        <RichTextDisplay content={block.brandName} placeholder="Brand Name" className="logo-brand-input" />
+        <RichTextDisplay content={block.tagline} placeholder="Tagline (optional)" className="logo-tagline-input" />
       </div>
     </div>
   )

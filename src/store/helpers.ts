@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { textToJSON } from '../components/RichTextInput/utils'
-import type { Area, AreaType, Block, BlockType, GlobalTypography, MenuDoc, PageConfig, PageDimensions, PageSizePreset, Pane, Section, SectionPreset, Spacing } from './types'
+import type { Area, AreaType, Block, BlockType, GlobalTypography, MenuDoc, MenuStyle, PageConfig, PageDimensions, PageSizePreset, Pane, Section, SectionPreset, Spacing } from './types'
 
 export function createId(): string {
   return nanoid()
@@ -44,10 +44,16 @@ export const DEFAULT_TYPOGRAPHY: GlobalTypography = {
   lineHeight: 1.4,
 }
 
+export const DEFAULT_MENU_STYLE: MenuStyle = {
+  title: { bold: true, italic: false, underline: false, color: '', fontSize: 22, align: 'left' },
+  item: { bold: false, italic: false, underline: false, color: '', fontSize: 14, align: 'left' },
+}
+
 export function createEmptyDoc(): MenuDoc {
   return {
     page: DEFAULT_PAGE_CONFIG,
     typography: DEFAULT_TYPOGRAPHY,
+    menuStyle: DEFAULT_MENU_STYLE,
     areas: [],
     pages: [],
   }
@@ -122,11 +128,11 @@ export function createBlock(type: BlockType): Block {
       return {
         ...base,
         type: 'menu',
-        title: textToJSON('Category', { fontSize: '22px' }),
+        title: 'Category',
         items: [
-          { name: textToJSON('Item 1'), price: textToJSON('$0.00'), unit: textToJSON('') },
-          { name: textToJSON('Item 2'), price: textToJSON('$0.00'), unit: textToJSON('') },
-          { name: textToJSON('Item 3'), price: textToJSON('$0.00'), unit: textToJSON('') },
+          { name: 'Item 1', price: '$0.00', unit: '' },
+          { name: 'Item 2', price: '$0.00', unit: '' },
+          { name: 'Item 3', price: '$0.00', unit: '' },
         ],
       }
     case 'image':

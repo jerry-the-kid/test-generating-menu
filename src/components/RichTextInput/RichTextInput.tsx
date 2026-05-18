@@ -8,7 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import type { JSONContent, Editor } from "@tiptap/react";
 import "./RichTextInput.css";
 
-const SHARED_EXTENSIONS = [
+export const SHARED_EXTENSIONS = [
   StarterKit.configure({
     blockquote: false,
     bulletList: false,
@@ -34,9 +34,11 @@ export interface RichTextInputProps {
   className?: string;
   singleLine?: boolean;
   style?: React.CSSProperties;
+  /** Render the formatting toolbar docked above the editor and always visible. */
+  alwaysShowToolbar?: boolean;
 }
 
-const FONT_SIZES = [
+export const FONT_SIZES = [
   "10", "12", "13", "14", "16", "18", "20", "22", "24",
   "28", "32", "36", "38", "42", "48", "56", "64", "72",
 ];
@@ -46,15 +48,19 @@ const TOOLBAR_BTN_BASE =
 const TOOLBAR_BTN_ACTIVE =
   "bg-sky-100 border-sky-300 text-sky-700 border rounded cursor-pointer px-1.5 py-0.5 text-[13px] min-w-[26px] h-[26px] flex items-center justify-center";
 
-function ToolbarButtons({ editor }: { editor: Editor }) {
+function ToolbarButtons({ editor, docked = false }: { editor: Editor; docked?: boolean }) {
   const currentSize =
     editor.getAttributes("textStyle")?.fontSize?.replace("px", "") ?? "14";
 
   const btn = (active: boolean) => (active ? TOOLBAR_BTN_ACTIVE : TOOLBAR_BTN_BASE);
 
+  const containerClass = docked
+    ? "flex flex-wrap items-center gap-0.5 bg-slate-50 border border-slate-200 border-b-0 rounded-t-md px-1.5 py-1"
+    : "absolute bottom-full left-0 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.12)] z-[100] whitespace-nowrap mb-1"
+
   return (
     <div
-      className="absolute bottom-full left-0 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md px-1.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.12)] z-[100] whitespace-nowrap mb-1"
+      className={containerClass}
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -137,6 +143,7 @@ export function RichTextInput({
   className,
   singleLine = false,
   style,
+  alwaysShowToolbar = false,
 }: RichTextInputProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const lastContentRef = useRef(content);
@@ -191,6 +198,21 @@ export function RichTextInput({
     }
   }, [content, editor]);
 
+  if (alwaysShowToolbar) {
+    return (
+      <div
+        ref={wrapperRef}
+        className="w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {editor && <ToolbarButtons editor={editor} docked />}
+        <div className="border border-slate-200 rounded-b-md bg-white px-2 py-1.5">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={wrapperRef}
@@ -203,49 +225,39 @@ export function RichTextInput({
   );
 }
 
-// ─── Lazy wrapper — renders static HTML until clicked ────────────────────
+// ─── Read-only static renderer (used by canvas preview) ─────────────────
 
-export function LazyRichTextInput(props: RichTextInputProps) {
-  const [isActive, setIsActive] = useState(false);
-
+export function RichTextDisplay({
+  content,
+  className,
+  placeholder,
+  style,
+}: Readonly<{
+  content: JSONContent
+  className?: string
+  placeholder?: string
+  style?: React.CSSProperties
+}>) {
   const html = useMemo(() => {
     try {
-      return generateHTML(props.content, SHARED_EXTENSIONS);
+      return generateHTML(content, SHARED_EXTENSIONS)
     } catch {
-      return "";
+      return ""
     }
-  }, [props.content]);
+  }, [content])
 
-  if (!isActive) {
-    return (
-      <div
-        className={`relative w-full rich-text-preview ${props.className ?? ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsActive(true);
-        }}
-        style={props.style}
-      >
-        {!(html === "<p></p>") && html ? (
-          <div
-            className="rich-text-editor"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        ) : (
-          <div className="rich-text-editor rich-text-empty">
-            <p className="rt-placeholder">{props.placeholder}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const isEmpty = !html || html === "<p></p>"
 
   return (
-    <RichTextInput
-      {...props}
-      onUpdate={(json) => {
-        props.onUpdate(json);
-      }}
-    />
-  );
+    <div className={`relative w-full rich-text-preview ${className ?? ""}`} style={style}>
+      {isEmpty ? (
+        <div className="rich-text-editor rich-text-empty">
+          <p className="rt-placeholder">{placeholder}</p>
+        </div>
+      ) : (
+        <div className="rich-text-editor" dangerouslySetInnerHTML={{ __html: html }} />
+      )}
+    </div>
+  )
 }
+

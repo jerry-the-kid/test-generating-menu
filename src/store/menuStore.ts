@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { temporal } from 'zundo'
-import type { Alignment, Area, AreaType, Block, BlockType, ContentAlignment, MenuDoc, Page, PageConfig, PageSizePreset, Pane, PanelLevel, Section, SectionPreset, Spacing } from './types'
+import type { Alignment, Area, AreaType, Block, BlockType, ContentAlignment, MenuDoc, MenuItem, MenuTextStyle, Page, PageConfig, PageSizePreset, Pane, PanelLevel, Section, SectionPreset, Spacing } from './types'
 import { createArea, createBlock, createEmptyDoc, createId, createSection, findBlockAncestors, findBlockInDoc, findSectionInDoc, MM_TO_PX, resolvePageDimensions } from './helpers'
 
 interface MenuStoreState {
@@ -59,11 +59,17 @@ interface MenuStoreActions {
   updateBlock: (blockId: string, patch: Partial<Block>) => void
   deleteBlock: (blockId: string) => void
   moveBlock: (blockId: string, toSectionId: string, toPaneId: string, toIndex: number) => void
-  setBlockWidthPercent: (blockId: string, percent: number) => void
   setBlockGap: (blockId: string, gap: number) => void
-  setBlockAlignment: (blockId: string, alignment: Alignment) => void
   setBlockMargin: (blockId: string, patch: Partial<Spacing>) => void
   setBlockPadding: (blockId: string, patch: Partial<Spacing>) => void
+
+  // Menu items
+  addMenuItem: (blockId: string) => void
+  updateMenuItem: (blockId: string, idx: number, patch: Partial<MenuItem>) => void
+  removeMenuItem: (blockId: string, idx: number) => void
+
+  // Menu style (global)
+  setMenuStyle: (patch: { title?: Partial<MenuTextStyle>; item?: Partial<MenuTextStyle> }) => void
 
   // Selection
   selectBlock: (blockId: string | null) => void
@@ -321,19 +327,9 @@ export const useMenuStore = create<MenuStoreState>()(
           }
         }),
 
-        setBlockWidthPercent: (blockId, percent) => set((state) => {
-          const result = findBlockInDoc(state.doc, blockId)
-          if (result) result.block.widthPercent = Math.max(10, Math.min(100, percent))
-        }),
-
         setBlockGap: (blockId, gap) => set((state) => {
           const result = findBlockInDoc(state.doc, blockId)
           if (result) result.block.gap = Math.max(0, gap)
-        }),
-
-        setBlockAlignment: (blockId, alignment) => set((state) => {
-          const result = findBlockInDoc(state.doc, blockId)
-          if (result) result.block.alignment = alignment
         }),
 
         setBlockMargin: (blockId, patch) => set((state) => {
@@ -344,6 +340,30 @@ export const useMenuStore = create<MenuStoreState>()(
         setBlockPadding: (blockId, patch) => set((state) => {
           const result = findBlockInDoc(state.doc, blockId)
           if (result) Object.assign(result.block.padding, patch)
+        }),
+
+        addMenuItem: (blockId) => set((state) => {
+          const result = findBlockInDoc(state.doc, blockId)
+          if (!result || result.block.type !== 'menu') return
+          result.block.items.push({ name: '', price: '', unit: '' })
+        }),
+
+        updateMenuItem: (blockId, idx, patch) => set((state) => {
+          const result = findBlockInDoc(state.doc, blockId)
+          if (!result || result.block.type !== 'menu') return
+          const item = result.block.items[idx]
+          if (item) Object.assign(item, patch)
+        }),
+
+        removeMenuItem: (blockId, idx) => set((state) => {
+          const result = findBlockInDoc(state.doc, blockId)
+          if (!result || result.block.type !== 'menu') return
+          result.block.items.splice(idx, 1)
+        }),
+
+        setMenuStyle: (patch) => set((state) => {
+          if (patch.title) Object.assign(state.doc.menuStyle.title, patch.title)
+          if (patch.item) Object.assign(state.doc.menuStyle.item, patch.item)
         }),
 
         moveBlock: (blockId, toSectionId, toPaneId, toIndex) => set((state) => {
@@ -533,6 +553,7 @@ export const useMenuStore = create<MenuStoreState>()(
 export const useDoc = () => useMenuStore((s) => s.doc)
 export const usePages = () => useMenuStore((s) => s.doc.pages)
 export const useTypography = () => useMenuStore((s) => s.doc.typography)
+export const useMenuStyle = () => useMenuStore((s) => s.doc.menuStyle)
 export const usePageConfig = () => useMenuStore((s) => s.doc.page)
 
 export const useSelectedBlockId = () => useMenuStore((s) => s.selectedBlockId)

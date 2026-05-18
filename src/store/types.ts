@@ -59,14 +59,14 @@ export interface SubheadingBlock extends BaseBlock {
 }
 
 export interface MenuItem {
-  name: JSONContent
-  price: JSONContent
-  unit: JSONContent
+  name: string
+  price: string
+  unit: string
 }
 
 export interface MenuBlock extends BaseBlock {
   type: 'menu'
-  title: JSONContent
+  title: string
   items: MenuItem[]
 }
 
@@ -205,9 +205,27 @@ export interface GlobalTypography {
   lineHeight: number
 }
 
+export interface MenuTextStyle {
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  /** Hex/CSS color, or '' to inherit */
+  color: string
+  /** Base px; multiplied by typography.scaleFactor at render */
+  fontSize: number
+  align: 'left' | 'center' | 'right'
+}
+
+export interface MenuStyle {
+  title: MenuTextStyle
+  /** Applies uniformly to name, price, and unit fields */
+  item: MenuTextStyle
+}
+
 export interface MenuDoc {
   page: PageConfig
   typography: GlobalTypography
+  menuStyle: MenuStyle
   areas: Area[]
   pages: Page[]
 }
